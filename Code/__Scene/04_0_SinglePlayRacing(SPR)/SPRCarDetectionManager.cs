@@ -1,44 +1,47 @@
 ﻿using UnityEngine;
 
-public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
+public class SPRCarDetectionManager : MonoBehaviour
 {
-    public class CarDetectionInformation
-    {
-
-    }
-
-    private CarDetectionInformation info;
-
-    private SPRGameManager sprGameManager;
+    private SPRCarManager sprCarManager;
+    private SPRLapManager sprLapManager;
+    private SPRStageManager sprStageManager;
+    private SPRUIManager sprUIManager;
 
     private GameObject carObject;
-
-    private void Awake()
-    {
-        this.info = new CarDetectionInformation();
-    }
 
     private void Start()
     {
         PrepareBaseObjects();
-        InitSPRCarDetectionManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
+        GameObject manager = GameObject.Find("Manager");
         if (this.carObject == null)
         {
             this.carObject = this.gameObject.transform.parent.gameObject;
         }
 
-        if (this.sprGameManager == null)
+        if (this.sprCarManager == null)
         {
-            this.sprGameManager = SPRGameManager.instance;
+            this.sprCarManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Game"), "SPRCar", true).GetComponent<SPRCarManager>();
         }
-    }
 
-    private void InitSPRCarDetectionManager()
-    {
+        if (this.sprLapManager == null)
+        {
+            this.sprLapManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRLapManager", true).GetComponent<SPRLapManager>();
+        }
+
+        if (this.sprStageManager == null)
+        {
+            this.sprStageManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRStageManager", true).GetComponent<SPRStageManager>();
+        }
+
+        if (this.sprUIManager == null)
+        {
+            this.sprUIManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRUIManager", true).GetComponent<SPRUIManager>();
+        }
+
 
     }
 
@@ -69,7 +72,7 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
                     SPRCollisionManager.CollisionDirection cd = (SPRCollisionManager.CollisionDirection)m.info;
                     ESPRCollisionDirection e = cd.Collide();
 
-                    this.sprGameManager.sprCarManager.SetReadyTurnCar((ECarState)e);
+                    this.sprCarManager.SetReadyTurnCar((ECarState)e);
                 }
                 break;
 
@@ -78,7 +81,7 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
                     SPRCollisionManager.CollisionWall cw = (SPRCollisionManager.CollisionWall)m.info;
                     ESPRCollisionWall e = cw.Collide();
 
-                    this.sprGameManager.sprCarManager.ResetCarPosition(cw.resetPosition);
+                    this.sprCarManager.ResetCarPosition(cw.resetPosition);
                 }
                 break;
 
@@ -87,7 +90,7 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
                     SPRCollisionManager.CollisionBooster cb = (SPRCollisionManager.CollisionBooster)m.info;
                     ESPRCollisionBooster e = cb.Collide();
 
-                    this.sprGameManager.sprCarManager.BoostCar((EBoosterLevel)e);
+                    this.sprCarManager.BoostCar((EBoosterLevel)e);
                 }
                 break;
 
@@ -96,7 +99,7 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
                     SPRCollisionManager.CollisionObstacle co = (SPRCollisionManager.CollisionObstacle)m.info;
                     ESPRCollisionObstacle e = co.Collide();
 
-                    this.sprGameManager.sprCarManager.ObstacleDecelerateCar(e);
+                    this.sprCarManager.ObstacleDecelerateCar(e);
                 }
                 break;
 
@@ -106,7 +109,7 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
                     ESPRCollisionLap e = cl.Collide();
 
                     CollideWithCollisionLap(otherObject.gameObject, e);
-                    SPRGameManager.instance.sprUIManager.UpdateUILapCount();
+                    this.sprUIManager.UpdateUILapCount();
                 }
                 break;
 
@@ -125,12 +128,12 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
         {
             case ESPRCollisionLap.Normal:
                 {
-                    this.sprGameManager.sprLapManager.AddCurrentLapCount(1);
+                    this.sprLapManager.AddCurrentLapCount(1);
 
-                    if (this.sprGameManager.sprLapManager.IsLastLap() == true)
+                    if (this.sprLapManager.IsLastLap() == true)
                     {
-                        this.sprGameManager.sprLapManager.StartCoroutineBlinkLastLapUI(null);
-                        this.sprGameManager.sprMapManager.ActiveCollisionLapHalf(true);
+                        this.sprLapManager.StartCoroutineBlinkLastLapUI();
+                        this.sprStageManager.ActiveCollisionLapHalf(true);
                         otherObject.gameObject.SetActive(false);
                     }
                 }
@@ -138,24 +141,24 @@ public class SPRCarDetectionManager : MonoBehaviour, ICMInterface
 
             case ESPRCollisionLap.Half:
                 {
-                    if (this.sprGameManager.sprLapManager.IsLastLap() == false)
+                    if (this.sprLapManager.IsLastLap() == false)
                     {
                         return;
                     }
 
-                    this.sprGameManager.sprMapManager.ActiveCollisionLapFinish(true);
+                    this.sprStageManager.ActiveCollisionLapFinish(true);
                 }
                 break;
 
             case ESPRCollisionLap.Finish:
                 {
-                    if (this.sprGameManager.sprLapManager.IsLastLap() == false)
+                    if (this.sprLapManager.IsLastLap() == false)
                     {
                         return;
                     }
 
                     SPRGameManager.instance.FinishGame();
-                    this.sprGameManager.sprCarManager.SetCarFinish();
+                    this.sprCarManager.SetCarFinish();
                 }
                 break;
 

@@ -15,9 +15,20 @@ public enum ESPRGameState
     Max,
 }
 
-public class SPRGameManager : MonoBehaviour, ICMInterface
+public class SPRGameManager : MonoBehaviour
 {
-    public static SPRGameManager instance = null;
+    private static SPRGameManager _instance = null;
+    public static SPRGameManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class GameInformation
     {
@@ -68,11 +79,13 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
 
     private SPRCameraManager sprCameraManager;
 
-    public SPRCarManager sprCarManager;
-    public SPRUIManager sprUIManager;
-    public SPRMapManager sprMapManager;
-    public SPRLapManager sprLapManager;
-    public SPRItemManager sprItemManager;
+    private SPRCarManager sprCarManager;
+    private SPRUIManager sprUIManager;
+    private SPRStageManager sprStageManager;
+    private SPRLapManager sprLapManager;
+    private SPRItemManager sprItemManager;
+
+    private bool thread_wait_moveToFinish;
 
     private void Awake()
     {
@@ -103,12 +116,9 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         GameObject manager = GameObject.Find("Manager");
-
-        this.info.eCurrentSPRGameState = ESPRGameState.None;
-        this.info.currentStageID = SecurityPlayerPrefs.GetInt("security-related", 0);
 
         if (this.sprCarManager == null)
         {
@@ -125,9 +135,9 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
             this.sprUIManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRUIManager", true).GetComponent<SPRUIManager>();
         }
 
-        if (this.sprMapManager == null)
+        if (this.sprStageManager == null)
         {
-            this.sprMapManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRMapManager", true).GetComponent<SPRMapManager>();
+            this.sprStageManager = CMObjectManager.FindGameObjectInAllChild(manager, "SPRStageManager", true).GetComponent<SPRStageManager>();
         }
 
         if (this.sprLapManager == null)
@@ -143,7 +153,8 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
 
     private void InitGameManager()
     {
-
+        this.info.eCurrentSPRGameState = ESPRGameState.None;
+        this.info.currentStageID = SecurityPlayerPrefs.GetInt("security-related", SPRStageManager.GetDefaultStageID());
     }
 
     private void UpdateGame()
@@ -156,18 +167,19 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
         this.sprLapManager.UpdateCurrentLapTime();
     }
 
+    public void RefreshUICoin()
+    {
+        this.sprUIManager.RefreshUICoin();
+    }
+
     public void StartGame()
     {
         this.info.eCurrentSPRGameState = ESPRGameState.Playing;
 
-        // Play Bgm
         BgmManager.instance.LoadBgmResources(EBgmType.RacingStage, this.info.currentStageID);
         BgmManager.instance.PlayGameBgm(true);
 
-        // Active Car
         this.sprCarManager.SetCarEnable(true);
-
-        // UI
         this.sprUIManager.StartGame();
     }
 
@@ -183,10 +195,8 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
     {
         this.info.eCurrentSPRGameState = ESPRGameState.Pause;
 
-        // UI 코드
         this.sprUIManager.PauseGame();
 
-        // Sound
         BgmManager.instance.PauseGameBgm();
         Time.timeScale = 0.0f;
     }
@@ -195,10 +205,8 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
     {
         this.info.eCurrentSPRGameState = ESPRGameState.Playing;
 
-        // UI 코드
         this.sprUIManager.ResumeGame();
 
-        // Sound
         BgmManager.instance.ResumeGameBgm();
         Time.timeScale = 1.0f;
     }
@@ -215,30 +223,103 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
     {
         this.info.eCurrentSPRGameState = ESPRGameState.End;
 
-        this.sprCarManager.SetCarFinish();
         this.sprUIManager.FinishGame();
+        this.sprCarManager.SetCarFinish();
+        this.sprLapManager.CalculateResultLapTime();
 
         // Post user coin to Firebase DB
         ServerManager.instance.PostUserCoinToFirebaseDB(this.info.coinQuantity);
 
-        // Update record
-        float srRecordTime = UserManager.instance.GetSRRecords(this.sprMapManager.GetCurrentStageID(), "security-related");
+        // Update record & Set Finish Information
+        bool isBestRecord = false;
+        SPRFinishManager.SPRFinishInformation finishInfo = new SPRFinishManager.SPRFinishInformation();
+        float srRecordTime = UserManager.instance.GetSRRecords(this.sprStageManager.GetCurrentStageID(), "security-related");
 
-        if (srRecordTime > this.sprLapManager.GetCurrentLapTime() || srRecordTime == SPRLapManager.kNoneLapTime)
+        if (srRecordTime > this.sprLapManager.GetCurrentLapTime() || srRecordTime == SPRLapManager.GetNoneLapTime())
         {
+            isBestRecord = true;
+
             // Post user SPR record to Firebase DB
-            ServerManager.instance.PostUserSPRRecordToFirebaseDB(this.sprMapManager.GetCurrentStageID(),
+            ServerManager.instance.PostUserSPRRecordToFirebaseDB(this.sprStageManager.GetCurrentStageID(),
                                                                 this.sprLapManager.GetCurrentLapTime(),
                                                                 this.sprCarManager.GetCarInfoID(),
                                                                 this.sprCarManager.GetCarPaintID());
 
             // Check user SPR record and Post SPR Ranking To Firebase DB
-            ServerManager.instance.CheckAndPostUserSPRRankingToFirebaseDB(this.sprMapManager.GetCurrentStageID());
+            delegateActiveFlag delegateF = new delegateActiveFlag(ActiveThreadMoveToFinish);
+            InActiveThreadMoveToFinish();
+            ServerManager.instance.CheckAndPostUserSPRRankingToFirebaseDB(this.sprStageManager.GetCurrentStageID(), delegateF);
         }
-
-        // Sound
+        else
+        {
+            isBestRecord = false;
+            ActiveThreadMoveToFinish();
+        }
+        
         BgmManager.instance.StopGameBgm();
         SoundManager.instance.PlaySound(ESoundType.ETC, (int)ESoundETC.Finish);
+        StartCoroutine(MoveToFinishScene(isBestRecord));
+    }
+
+    private void ActiveThreadMoveToFinish()
+    {
+        this.thread_wait_moveToFinish = true;
+    }
+
+    private void InActiveThreadMoveToFinish()
+    {
+        this.thread_wait_moveToFinish = false;
+    }
+
+    private bool GetThreadMoveToFinish()
+    {
+        return this.thread_wait_moveToFinish;
+    }
+
+    private IEnumerator MoveToFinishScene(bool isBestRecord)
+    {
+        delegateGetFlag delegateGetFlag = new delegateGetFlag(GetThreadMoveToFinish);
+        yield return StartCoroutine(CMDelegate.CoroutineThreadWait(delegateGetFlag));
+
+        if (GetThreadMoveToFinish() == false)
+        {
+            string errorText = string.Format(TextManager.instance.GetText(ETextType.Game, (int)EGameText.Error), EnumError.GetEGameErrorCodeString(EGameError.ThreadWaitTimeOver));
+            PopupManager.instance.OpenCheckPopup(errorText);
+            SceneManager.LoadScene(UserManager.instance.GetBeforeSceneName());
+            yield break;
+        }
+
+        InstantiateAndSetFinishManager(isBestRecord);
+        FadeOutAndLoadFinishScene();
+    }
+
+    private void InstantiateAndSetFinishManager(bool isBestRecord)
+    {
+        GameObject finsihManagerPrefab = Resources.Load("security-related") as GameObject;
+        GameObject finishManagerObject = Instantiate(finsihManagerPrefab);
+        DontDestroyOnLoad(finishManagerObject);
+
+        SPRFinishManager finishManager = finishManagerObject.GetComponent<SPRFinishManager>();
+        SPRFinishManager.SPRFinishInformation info = new SPRFinishManager.SPRFinishInformation();
+
+        info.isBestRecord = isBestRecord;
+        info.currentStageID = this.sprStageManager.GetCurrentStageID();
+        info.currentUserRanking = 999; // TO DO : 수정 필요
+        info.resultCoin = this.info.coinQuantity;
+        info.resultLapTime = this.sprLapManager.GetResultLapTime();
+
+        finishManager.SetSPRFinishInformation(info);
+    }
+
+    private void FadeOutAndLoadFinishScene()
+    {
+        FadeEffectManager fadeEffectManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Manager"), "FadeEffectManager", true).GetComponent<FadeEffectManager>();
+        FadeEffectManager.FadeEffectInformation fadeEffectInfo = new FadeEffectManager.FadeEffectInformation();
+
+        delegateLoadScene delegateLS = new delegateLoadScene(SceneManager.LoadScene);
+
+        fadeEffectManager.InitFadeEffectInformation(ref fadeEffectInfo, false);
+        fadeEffectManager.StartCoroutineFadeEffectWithLoadScene(fadeEffectInfo, delegateLS, SPRFinishManager.kFinishSceneName);
     }
 
     public void FailGame()
@@ -248,7 +329,6 @@ public class SPRGameManager : MonoBehaviour, ICMInterface
         this.sprCarManager.SetCarDeath();
         this.sprUIManager.FailGame();
 
-        // update coin
         ServerManager.instance.PostUserCoinToFirebaseDB(this.info.coinQuantity);
 
         // Sound

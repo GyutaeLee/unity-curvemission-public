@@ -21,7 +21,12 @@ public class VillageManager : MonoBehaviour
 
     private void InitVillageManager()
     {
-        BgmManager.instance.LoadBgmResources(EBgmType.Village, SecurityPlayerPrefs.GetInt("security-related", 1));
+        BgmManager.instance.LoadBgmResources(EBgmType.Village, SecurityPlayerPrefs.GetInt("security-related", ConvertVillageTypeToIndex(EVillageType.Village)));
         BgmManager.instance.PlayGameBgm(true);
+    }
+
+    public static int ConvertVillageTypeToIndex(EVillageType eVillageType)
+    {
+        return (int)eVillageType;
     }
 }

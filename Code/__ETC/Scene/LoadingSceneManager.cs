@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class LoadingSceneManager : MonoBehaviour, ICMInterface
+public class LoadingSceneManager : MonoBehaviour
 {
     private static string nextSceneName;
     private const string kLoadSceneName = "security-related";
@@ -16,16 +16,12 @@ public class LoadingSceneManager : MonoBehaviour, ICMInterface
         PrepareBaseObjects();
         InitLoadingSceneManager();
 
-        // TO DO : 테스트 코드
-        StartCoroutine(LoadScene());   
+        StartCoroutine(LoadSceneWithProgressBar());   
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.IMG_ProgressBar == null)
-        {
-            this.IMG_ProgressBar = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("MainCanvas"), "IMG_ProgressBar", true).GetComponent<Image>();
-        }
+        CMObjectManager.CheckNullAndFindImageInAllChild(ref this.IMG_ProgressBar, GameObject.Find("MainCanvas"), "IMG_ProgressBar", true);
     }
 
     private void InitLoadingSceneManager()
@@ -39,7 +35,7 @@ public class LoadingSceneManager : MonoBehaviour, ICMInterface
         SceneManager.LoadScene(kLoadSceneName);
     }
 
-    private IEnumerator LoadScene()
+    private IEnumerator LoadSceneWithProgressBar()
     {
         yield return null;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class ShopCarItemInfo : MonoBehaviour
+public class ShopItemInfo : MonoBehaviour
 {
     [Serializable]
     public class CarItemInfo
@@ -19,7 +19,7 @@ public class ShopCarItemInfo : MonoBehaviour
             switch (this.eCarItemType)
             {
                 case ECarItemType.Car:
-                    spriteName = "security-related" + this.carItemInfoID + "/" + "security-related";
+                    spriteName = "security-related" + this.carItemInfoID + "/" + InventoryInformation.GetDefaultPaintInfoID();
                     break;
                 case ECarItemType.Paint:
                     spriteName = "security-related" + this.currentCarID;

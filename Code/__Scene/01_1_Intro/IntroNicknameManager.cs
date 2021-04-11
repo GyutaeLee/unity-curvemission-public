@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class IntroNicknameManager : MonoBehaviour, ICMInterface
+public class IntroNicknameManager : MonoBehaviour
 {
     public class IntroNicknameInformation
     {
@@ -26,47 +26,22 @@ public class IntroNicknameManager : MonoBehaviour, ICMInterface
     private void Start()
     {
         PrepareBaseObjects();
-        InitIntroNicknameManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         GameObject mainCanvas = GameObject.Find("MainCanvas");
 
-        if (this.CANVAS_Nickname == null)
-        {
-            this.CANVAS_Nickname = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Nickname", true);
-        }
-
-        if (this.CANVAS_Start == null)
-        {
-            this.CANVAS_Start = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Start", true);
-        }
-
-        if (this.POPUP_WrongNickname == null)
-        {
-            this.POPUP_WrongNickname = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "POPUP_WrongNickname", true);
-        }
-
-        if (this.TXT_Popup == null)
-        {
-            this.TXT_Popup = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "PopupText", true).GetComponent<Text>();
-        }
-
-        if (this.INPUT_Nickname == null)
-        {
-            this.INPUT_Nickname = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "InputField", true).GetComponent<InputField>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Nickname, mainCanvas, "CANVAS_Nickname", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Start, mainCanvas, "CANVAS_Start", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.POPUP_WrongNickname, mainCanvas, "POPUP_WrongNickname", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_Popup, mainCanvas, "PopupText", true);
+        CMObjectManager.CheckNullAndFindInputFieldInAllChild(ref this.INPUT_Nickname, mainCanvas, "InputField", true);
 
         if (this.loginManager == null)
         {
             this.loginManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Manager"), "LoginManager", true).GetComponent<LoginManager>();
         }
-    }
-
-    private void InitIntroNicknameManager()
-    {
-
     }
 
     public void ActiveNicknameCanvas(bool isEnabled)
@@ -113,7 +88,6 @@ public class IntroNicknameManager : MonoBehaviour, ICMInterface
 
         if (IsValidNickname(this.info.nickname) == false)
         {
-            // 검사에 걸리면 규칙에 맞지 않다는 UI를 띄운다.
             ActiveWrongNickNameUI(true);
         }
         else
@@ -130,10 +104,8 @@ public class IntroNicknameManager : MonoBehaviour, ICMInterface
     {
         bool isCorrectNickname = false;
 
-        // 닉네임 입력하는 UI off
         ActiveNicknameCanvas(false);
 
-        // 금칙어 & 닉네임 길이 검사
         isCorrectNickname = (IsContainBanWord(nickname) == true) && (IsCorrectLength(nickname) == true);
 
         return isCorrectNickname;

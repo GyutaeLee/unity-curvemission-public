@@ -1,31 +1,39 @@
 ﻿using UnityEngine;
 
-public class SPRMapManager : MonoBehaviour, ICMInterface
+public enum ESPRStageType
+{ 
+    None = 0,
+
+    BalsanVillage = 1001,
+
+    Max
+}
+
+public class SPRStageManager : MonoBehaviour
 {
-    public class MapInformation
+    public class SPRStageInformation
     {
         public int currentStageID;
     }
 
-    private MapInformation info;
+    private SPRStageInformation info;
 
     private GameObject collisionLapHalf;
     private GameObject collisionLapFinish;
 
     private void Awake()
     {
-        this.info = new MapInformation();
+        this.info = new SPRStageInformation();
     }
 
     private void Start()
     {
         PrepareBaseObjects();
-        InitSPRMapManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        this.info.currentStageID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        this.info.currentStageID = SecurityPlayerPrefs.GetInt("security-related", GetDefaultStageID());
 
         GameObject game = GameObject.Find("Game");
         GameObject mapObject = Resources.Load("security-related" + this.info.currentStageID) as GameObject;
@@ -45,12 +53,11 @@ public class SPRMapManager : MonoBehaviour, ICMInterface
         }
     }
 
-    private void InitSPRMapManager()
-    {
-
-    }
-
     /* etc */
+    public static int GetDefaultStageID()
+    {
+        return (int)ESPRStageType.BalsanVillage;
+    }
 
     public void ActiveCollisionLapHalf(bool isActive)
     {
@@ -65,5 +72,14 @@ public class SPRMapManager : MonoBehaviour, ICMInterface
     public int GetCurrentStageID()
     {
         return this.info.currentStageID;
+    }
+
+    public static Sprite GetMapIcon(int stageID)
+    {
+        int mapIconIndex = stageID - GetDefaultStageID();
+        const string mapIconSpriteSheetName = "security-related";
+        Sprite mapIcon = Resources.LoadAll<Sprite>(mapIconSpriteSheetName)[mapIconIndex];
+
+        return mapIcon;
     }
 }

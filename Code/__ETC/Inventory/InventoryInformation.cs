@@ -1,42 +1,9 @@
-﻿public enum EInventoryType
+﻿public class InventoryInformation
 {
-    None = 0,
+    private const int kDefaultCarInfoID = security-related;
+    private const int kDefaultPaintInfoID = security-related;
+    private const int kDefaultPartsInfoID = security-related;
 
-    Avatar = 1,
-    Car = 2,
-
-    Max,
-}
-
-public enum EAvatarInventoryType
-{
-    None = 0,
-
-    Hair = 1,
-    Head = 2,
-    Earring = 3,
-    Face = 4,
-    Top = 5,
-    Hand = 6,
-    Bottom = 7,
-    Shoe = 8,
-
-    Max,
-}
-
-public enum ECarInventoryType
-{
-    None = 0,
-
-    Car = 1,
-    Paint = 2,
-    Parts = 3,
-
-    Max,
-}
-
-public class InventoryInformation
-{
     public static ECarInventoryType ConvertTypeCarItemToCarInventory(ECarItemType eCarItemType)
     {
         ECarInventoryType eCarInventoryType;
@@ -78,5 +45,20 @@ public class InventoryInformation
         }
 
         return key;
+    }
+
+    public static int GetDefaultCarInfoID()
+    {
+        return kDefaultCarInfoID;
+    }
+
+    public static int GetDefaultPaintInfoID()
+    {
+        return kDefaultPaintInfoID;
+    }
+
+    public static int GetDefaultPartsInfoID()
+    {
+        return kDefaultPartsInfoID;
     }
 }

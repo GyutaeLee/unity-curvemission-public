@@ -12,8 +12,20 @@ using Firebase.Database;
 
 public class ServerManager : MonoBehaviour
 {
-    public static ServerManager instance = null;
-    public const int kServerMaxRankingCount = 5;
+    private static ServerManager _instance = null;
+    public static ServerManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
+
+    private const int kServerSPRRankingMaxCount = 5;
 
     public class ServerInformation
     {
@@ -113,7 +125,7 @@ public class ServerManager : MonoBehaviour
     {
         if (FirebaseAuth.DefaultInstance.CurrentUser != this.serverInfo.firebaseUser)
         {
-            bool isSignedIn = IsFirebaseLoggedIn();
+            bool isSignedIn = (FirebaseAuth.DefaultInstance.CurrentUser != null);
 
             if (isSignedIn == false && this.serverInfo.firebaseUser != null)
             {
@@ -162,14 +174,14 @@ public class ServerManager : MonoBehaviour
         if (webLink == null || webLink == "")
         {
             Debug.Log("WARNING : NO WEB LINK!");
-            webLink = "security-related";
+            webLink = "http://google.com"; // TO DO  : 링크 파이어베이스 서버로 변경 필요
         }
 
         StartCoroutine(CoroutineCheckServerConnection((isConnected) =>
         {
             if (isConnected == false)
             {
-                // 인터넷이 연결되지 않았다는 팝업을 띄움
+                // TO DO : 인터넷이 연결되지 않았다는 팝업을 띄움
                 Debug.Log("ERROR : NO INTERNET CONNECTION");
                 //connectionSuccessAction();
             }
@@ -221,20 +233,20 @@ public class ServerManager : MonoBehaviour
     public void SetInitialLocalGameDatas()
     {
         // TO DO : 초기 유저값 세팅 추가하기
-        SecurityPlayerPrefs.SetInt("security-related", 0);
-        SecurityPlayerPrefs.SetInt("security-related", 0);
+        SecurityPlayerPrefs.SetInt("security-related", InventoryInformation.GetDefaultCarInfoID());
+        SecurityPlayerPrefs.SetInt("security-related", InventoryInformation.GetDefaultPaintInfoID());
     }
 
     /* 쓰기 작업 */
 
     public void PostUserCoinToFirebaseDB(int addCoinQuantity)
     {
-        string baseKey = "security-related/" + this.serverInfo.firebaseUser.UserId;
-        string progressCircleKey = "PostUserCoinToFirebaseDB";
+        string baseKey = "security-related" + this.serverInfo.firebaseUser.UserId;
+        string progressCircleKey = "security-related";
         string progressFlagKey = LoadingManager.instance.GetLoadingFlagKey(progressCircleKey);
 
         LoadingManager.instance.OpenProgressCircle(progressCircleKey);
-        LoadingManager.instance.ScheduleCloseProgressCircleInOtheThread(progressCircleKey, progressFlagKey);
+        LoadingManager.instance.ScheduleCloseProgressCircle(progressCircleKey, progressFlagKey);
 
         FirebaseDatabase.DefaultInstance.GetReference(baseKey).GetValueAsync().ContinueWith(task =>
         {
@@ -244,8 +256,7 @@ public class ServerManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
-                // close progress circle
-                LoadingManager.instance.SetLoadingFlag(progressFlagKey, true);
+                LoadingManager.instance.CloseScheduledProgressCircle(progressFlagKey);
 
                 string childKey = "security-related";
                 DataSnapshot snapshot = task.Result;
@@ -278,14 +289,59 @@ public class ServerManager : MonoBehaviour
         this.serverInfo.databaseReference.Child(baseKey + "/" + childKey).SetValueAsync(isOpen);
     }
 
-    public void PostUserSPRRecordToFirebaseDB(int stageID, float newRecordTime, int newRecordCar, int newRecordPaint)
+    public void PostPurchaseCarItemToFirebaseDB(ECarInventoryType eCarInventoryType, int addCoinQuantity, int carInfoID, int itemInfoID, bool isOpen, delegatePurchaseResult delegatePR)
     {
         string baseKey = "security-related" + this.serverInfo.firebaseUser.UserId;
-        string progressCircleKey = "PostUserSPRRecordToFirebaseDB";
+        string progressCircleKey = "security-related";
         string progressFlagKey = LoadingManager.instance.GetLoadingFlagKey(progressCircleKey);
 
         LoadingManager.instance.OpenProgressCircle(progressCircleKey);
-        LoadingManager.instance.ScheduleCloseProgressCircleInOtheThread(progressCircleKey, progressFlagKey);
+        LoadingManager.instance.ScheduleCloseProgressCircle(progressCircleKey, progressFlagKey);
+
+        FirebaseDatabase.DefaultInstance.GetReference(baseKey).GetValueAsync().ContinueWith(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.Log("ERROR : DB not found");
+
+                delegatePR(EPurchaseErrorType.Fail);
+            }
+            else if (task.IsCompleted)
+            {
+                LoadingManager.instance.CloseScheduledProgressCircle(progressFlagKey);
+
+                string childKey = "security-related";
+                DataSnapshot snapshot = task.Result;
+                string jsonData;
+
+                // goods
+                jsonData = snapshot.Child(childKey).GetRawJsonValue();
+                int serverCurrentCoin = JsonConvert.DeserializeObject<int>(jsonData);
+
+                if (serverCurrentCoin != UserManager.instance.GetUserCoin_1())
+                {
+                    // 서버와 로컬의 코인 개수가 다를 경우, 강제로 서버로 맞춘다.
+                    UserManager.instance.SetUserCoin_1(serverCurrentCoin);
+                }
+
+                UserManager.instance.AddUserCoin_1(addCoinQuantity);
+                this.serverInfo.databaseReference.Child(baseKey + "/" + childKey).SetValueAsync(UserManager.instance.GetUserCoin_1());
+
+                PostUserCarInventoryToFirebaseDB(eCarInventoryType, carInfoID, itemInfoID, isOpen);
+
+                delegatePR(EPurchaseErrorType.Success);
+            }
+        });
+    }
+
+    public void PostUserSPRRecordToFirebaseDB(int stageID, float newRecordTime, int newRecordCar, int newRecordPaint)
+    {
+        string baseKey = "security-related" + this.serverInfo.firebaseUser.UserId;
+        string progressCircleKey = "security-related";
+        string progressFlagKey = LoadingManager.instance.GetLoadingFlagKey(progressCircleKey);
+
+        LoadingManager.instance.OpenProgressCircle(progressCircleKey);
+        LoadingManager.instance.ScheduleCloseProgressCircle(progressCircleKey, progressFlagKey);
 
         FirebaseDatabase.DefaultInstance.GetReference(baseKey).GetValueAsync().ContinueWith(task =>
         {
@@ -295,8 +351,7 @@ public class ServerManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
-                // close progress circle
-                LoadingManager.instance.SetLoadingFlag(progressFlagKey, true);
+                LoadingManager.instance.CloseScheduledProgressCircle(progressFlagKey);
 
                 string childKey = "security-related" + stageID;
                 DataSnapshot snapshot = task.Result;
@@ -317,7 +372,7 @@ public class ServerManager : MonoBehaviour
                 float bestRecordTime = JsonConvert.DeserializeObject<float>(jsonData);
 
                 // 2-1. 새로운 기록이 더 느린 경우
-                if (bestRecordTime != SPRLapManager.kNoneLapTime && bestRecordTime <= newRecordTime)
+                if (bestRecordTime != SPRLapManager.GetNoneLapTime() && bestRecordTime <= newRecordTime)
                 {
                     return;
                 }
@@ -341,22 +396,39 @@ public class ServerManager : MonoBehaviour
         });
     }
 
-    /* 랭킹 업데이트 */
+    /* Update Ranking */
 
-    public void CheckAndPostUserSPRRankingToFirebaseDB(int stageID)
+    public void CheckAndPostUserSPRRankingToFirebaseDB(int stageID, delegateActiveFlag delegateF)
     {
         string baseKey = "security-related" + stageID;
+        string progressCircleKey = "security-related";
+        string progressFlagKey = LoadingManager.instance.GetLoadingFlagKey(progressCircleKey);
 
         FirebaseDatabase.DefaultInstance.GetReference(baseKey).RunTransaction(mutableData =>
         {
+            LoadingManager.instance.CloseScheduledProgressCircle(progressFlagKey);
+
             List<object> SPRRankings = mutableData.Value as List<object>;
+            bool isSuccess = false;
+            TransactionResult result;
 
-            if (CheckAndModifyUserSPRRanking(stageID, ref mutableData, ref SPRRankings) == false)
+            isSuccess = CheckAndModifyUserSPRRanking(stageID, ref mutableData, ref SPRRankings);
+
+            if (isSuccess == true)
             {
-                return TransactionResult.Abort();
-            }                        
+                result = TransactionResult.Success(mutableData);
+            }
+            else
+            {
+                result = TransactionResult.Abort();
+            }
 
-            return TransactionResult.Success(mutableData);
+            if (delegateF != null)
+            {
+                delegateF();
+            }
+
+            return result;
         });
     }       
 
@@ -433,7 +505,7 @@ public class ServerManager : MonoBehaviour
     {
         /* 1. 지워야할 기록 지우기 */
         // 랭킹 보드가 최대(kMaxRankingCount)로 채워져 있고 && 내 기록이 랭킹에 없는 경우  
-        if (mutableData.ChildrenCount >= ServerManager.kServerMaxRankingCount && isOwnRecord == false)
+        if (mutableData.ChildrenCount >= GetServerSPRRankingMaxCount() && isOwnRecord == false)
         {
             // 1-1. 랭킹 보드에 들어갈 수 없는 기록
             // 가장 좋지 않은 기록보다 안 좋은 경우
@@ -444,7 +516,6 @@ public class ServerManager : MonoBehaviour
             // 1-2. 랭킹 보드에 들어갈 수 있는 기록
             else
             {
-                // "랭킹 보드에서 가장 낮은 순위" 제거
                 SPRRankings.Remove(erasedValue);
             }
         }
@@ -476,7 +547,6 @@ public class ServerManager : MonoBehaviour
         ranking["security-related"] = UserManager.instance.GetUserNickname();
         ranking["security-related"] = this.serverInfo.firebaseUser.UserId;
 
-        // records
         Dictionary<string, System.Object> srRecord = new Dictionary<string, System.Object>();
         srRecord["security-related"] = UserManager.instance.GetSRRecords(stageID, "security-related").ToString();
         srRecord["security-related"] = UserManager.instance.GetSRRecords(stageID, "security-related");
@@ -499,14 +569,9 @@ public class ServerManager : MonoBehaviour
             else if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
+                UserManager.instance.InitUserInfoBySnapshotData(snapshot, nickname);                
 
-                // Snapshot 데이터로부터 유저의 기본 데이터를 초기화한다.
-                UserManager.instance.InitUserInfoBySnapshotData(snapshot, nickname);
-
-                // Push user base data to Firebase Database
-                PushUserBaseDataToFirebaseDB(snapshot);
-
-                // Push user infos data to Firebase Database
+                PushUserBaseDataToFirebaseDB(snapshot);                
                 PushUserInfosDataToFirebaseDB(snapshot);
             }
         });
@@ -530,11 +595,11 @@ public class ServerManager : MonoBehaviour
 
     private void RequestUserInfoFromFirebaseDB()
     {
-        string progressCircleKey = "RequestUserInfoFromFirebaseDB";
+        string progressCircleKey = "security-related";
         string progressFlagKey = LoadingManager.instance.GetLoadingFlagKey(progressCircleKey);
 
         LoadingManager.instance.OpenProgressCircle(progressCircleKey);
-        LoadingManager.instance.ScheduleCloseProgressCircleInOtheThread(progressCircleKey, progressFlagKey);
+        LoadingManager.instance.ScheduleCloseProgressCircle(progressCircleKey, progressFlagKey);
 
         FirebaseDatabase.DefaultInstance.GetReference("security-related" + this.serverInfo.firebaseUser.UserId).GetValueAsync().ContinueWith(task =>
         {
@@ -544,8 +609,7 @@ public class ServerManager : MonoBehaviour
             }
             else if (task.IsCompleted)
             {
-                // close progress circle
-                LoadingManager.instance.SetLoadingFlag(progressFlagKey, true);
+                LoadingManager.instance.CloseScheduledProgressCircle(progressFlagKey);
 
                 DataSnapshot snapshot = task.Result;
 
@@ -561,6 +625,11 @@ public class ServerManager : MonoBehaviour
     }
 
     /* etc */
+
+    public static int GetServerSPRRankingMaxCount()
+    {
+        return kServerSPRRankingMaxCount;
+    }
 
     public string GetFirebasUserEmail()
     {

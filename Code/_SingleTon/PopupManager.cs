@@ -2,9 +2,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupManager : MonoBehaviour, ICMInterface
+public class PopupManager : MonoBehaviour
 {
-    public static PopupManager instance = null;
+    private static PopupManager _instance = null;
+    public static PopupManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     private List<GameObject> popupObjects;
 
@@ -21,7 +32,6 @@ public class PopupManager : MonoBehaviour, ICMInterface
     private void Start()
     {
         PrepareBaseObjects();
-        InitPopupManager();
     }
 
     private void InitInstance()
@@ -37,18 +47,13 @@ public class PopupManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        this.popupCanvasObject = CMObjectManager.FindGameObjectInAllChild(this.gameObject, "popupCanvas", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.popupCanvasObject, this.gameObject, "popupCanvas", true);
 
         this.popupObjects = new List<GameObject>();
 
         this.checkPopupPrefab = Resources.Load("security-related") as GameObject;
-    }
-
-    private void InitPopupManager()
-    {
-
     }
 
     private void ActivePopupCanvas(bool isEnabled)

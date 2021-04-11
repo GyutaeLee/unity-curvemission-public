@@ -9,8 +9,8 @@ public class TEST_Garage : MonoBehaviour
 
     private void Start()
     {
-        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", 0);
-        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultCarInfoID());
+        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultPaintInfoID());
 
         TXT_carInfoID.text = "CAR INFO ID  : " + carInfoID;
         TXT_carPaintID.text = "CAR PAINT ID  : " + carPaintID;
@@ -18,21 +18,21 @@ public class TEST_Garage : MonoBehaviour
 
     public void ChangecarInfoID()
     {
-        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultCarInfoID());
 
         carInfoID++;
 
-        if (carInfoID <= 0)
+        if (carInfoID <= 1000)
         {
-            carInfoID = 0;
+            carInfoID = 1001;
         }
-        else if (carInfoID > 0)
+        else if (carInfoID > 1004)
         {
-            carInfoID = 0;
+            carInfoID = 1001;
         }
-        else if (carInfoID == 0)
+        else if (carInfoID == 1002)
         {
-            carInfoID = 0;
+            carInfoID = 1003;
         }
 
         SecurityPlayerPrefs.SetInt("security-related", carInfoID);
@@ -42,17 +42,17 @@ public class TEST_Garage : MonoBehaviour
 
     public void ChangecarPaintID()
     {
-        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultPaintInfoID());
 
         carPaintID++;
 
-        if (carPaintID < 0)
+        if (carPaintID < 1000)
         {
-            carPaintID = 0;
+            carPaintID = 1001;
         }
-        else if (carPaintID > 0)
+        else if (carPaintID > 1002)
         {
-            carPaintID = 0;
+            carPaintID = 1001;
         }
 
         SecurityPlayerPrefs.SetInt("security-related", carPaintID);

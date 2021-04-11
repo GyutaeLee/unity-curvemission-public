@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SPRIntroManager : MonoBehaviour, ICMInterface
+public class SPRIntroManager : MonoBehaviour
 {
     public class GameIntroInformation
     {        
@@ -31,48 +31,55 @@ public class SPRIntroManager : MonoBehaviour, ICMInterface
     {
         PrepareBaseObjects();
         InitSPRIntroManager();
+
+        StartSPRIntro();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
+    {
+        PrepareGameObject();
+        PrepareFadeEffectObject();
+    }
+
+    private void PrepareGameObject()
     {
         GameObject mainCanvas = GameObject.Find("MainCanvas");
 
-        if (this.CANVAS_Intro == null)
-        {
-            this.CANVAS_Intro = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Intro", true);
-        }
-
-        if (this.IMG_CountDown == null)
-        {
-            this.IMG_CountDown = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Intro, "IMG_CountDown", true).GetComponent<Image>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Intro, mainCanvas, "CANVAS_Intro", true);
+        CMObjectManager.CheckNullAndFindImageInAllChild(ref this.IMG_CountDown, this.CANVAS_Intro, "IMG_CountDown", true);
 
         if (this.SPT_CountDownArray == null)
         {
             this.SPT_CountDownArray = Resources.LoadAll<Sprite>("security-related");
         }
+    }
 
-        this.info.beginDelayTerm = 2.0f;
-        this.info.countDelayTerm = 0.1f;
-        this.info.countDownSptCount = 27;
-        this.info.goSptCount = 12;
+    private void PrepareFadeEffectObject()
+    {
+        GameObject fadeEffectObject = null;
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref fadeEffectObject, GameObject.Find("Manager"), "FadeEffectManager", true);
 
-        /* Fade Effect */
-        if (this.fadeEffectManager == null)
-        {
-            this.fadeEffectManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Manager"), "FadeEffectManager", true).GetComponent<FadeEffectManager>();
-        }
-
+        this.fadeEffectManager = fadeEffectObject.GetComponent<FadeEffectManager>();
         this.fadeEffectInfo = new FadeEffectManager.FadeEffectInformation();
         this.fadeEffectManager.InitFadeEffectInformation(ref this.fadeEffectInfo, true);
     }
 
     private void InitSPRIntroManager()
     {
+        this.info.beginDelayTerm = 2.0f;
+        this.info.countDelayTerm = 0.1f;
+        this.info.countDownSptCount = 27;
+        this.info.goSptCount = 12;
+    }
+
+    private void StartSPRIntro()
+    {
 #if (UNITY_EDITOR)
-        SPRGameManager.instance.StartGame();
+        SPRGameManager.instance.StartGame();        
+        CMObjectManager.FindGameObjectInAllChild(GameObject.Find("CANVAS_Fade"), "FadeObject", true).SetActive(false);
+        Destroy(this.gameObject);
 #else
-        this.m_fadeEffectManager.StartCoroutineFadeEffect(this.fadeEffectInfo);
+        this.fadeEffectManager.StartCoroutineFadeEffect(this.fadeEffectInfo);
         StartCoroutine(CoroutineGameIntroCountDown(this.info.beginDelayTerm, this.info.countDelayTerm, this.info.countDownSptCount, this.info.goSptCount));
 #endif
     }
@@ -81,44 +88,48 @@ public class SPRIntroManager : MonoBehaviour, ICMInterface
     {
         SoundManager.instance.PlaySound(ESoundType.Car, (int)ESoundCar.Engine_1);
         yield return new WaitForSeconds(beginDelayTerm);
-
         SPRGameManager.instance.SetCurrentSPRGameState(ESPRGameState.Intro);
 
-        WaitForSeconds WFS = new WaitForSeconds(countDelayTerm);
-
-        this.IMG_CountDown.enabled = true;
-        SoundManager.instance.PlaySound(ESoundType.ETC, (int)ESoundETC.CountDown);
-
-        // count down (3..2..1..)
-        int sptIndex = 0;
-        for (sptIndex = 0; sptIndex < countDownSptCount; sptIndex++)
-        {
-            if (sptIndex < this.SPT_CountDownArray.Length)
-            {
-                this.IMG_CountDown.sprite = this.SPT_CountDownArray[sptIndex];
-                this.IMG_CountDown.SetNativeSize();
-            }
-
-            yield return WFS;
-        }
-
-        // Start game
+        yield return StartCoroutine(CoroutineCountDownAnimation(countDelayTerm, countDownSptCount));
         SPRGameManager.instance.StartGame();
-
-        // "GO"
-        int totalSptCount = countDownSptCount + goSptCount;
-        for (; sptIndex < totalSptCount; sptIndex++)
-        {
-            if (sptIndex < this.SPT_CountDownArray.Length)
-            {
-                this.IMG_CountDown.sprite = this.SPT_CountDownArray[sptIndex];
-                this.IMG_CountDown.SetNativeSize();
-            }
-
-            yield return WFS;
-        }
+        yield return StartCoroutine(CoroutineGoAnimation(countDelayTerm, countDownSptCount, goSptCount));
 
         this.IMG_CountDown.enabled = false;
         Destroy(this.gameObject);
+    }
+
+    private IEnumerator CoroutineCountDownAnimation(float countDelayTerm, int countDownSptCount)
+    {
+        this.IMG_CountDown.enabled = true;
+        SoundManager.instance.PlaySound(ESoundType.ETC, (int)ESoundETC.CountDown);
+
+        WaitForSeconds WFS = new WaitForSeconds(countDelayTerm);
+        for (int sptIndex = 0; sptIndex < countDownSptCount; sptIndex++)
+        {
+            if (sptIndex < this.SPT_CountDownArray.Length)
+            {
+                this.IMG_CountDown.sprite = this.SPT_CountDownArray[sptIndex];
+                this.IMG_CountDown.SetNativeSize();
+            }
+
+            yield return WFS;
+        }
+    }
+
+    private IEnumerator CoroutineGoAnimation(float countDelayTerm, int countDownSptCount, int goSptCount)
+    {
+        WaitForSeconds WFS = new WaitForSeconds(countDelayTerm);
+
+        int totalSptCount = countDownSptCount + goSptCount;
+        for (int sptIndex = countDownSptCount; sptIndex < totalSptCount; sptIndex++)
+        {
+            if (sptIndex < this.SPT_CountDownArray.Length)
+            {
+                this.IMG_CountDown.sprite = this.SPT_CountDownArray[sptIndex];
+                this.IMG_CountDown.SetNativeSize();
+            }
+
+            yield return WFS;
+        }
     }
 }

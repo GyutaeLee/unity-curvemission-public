@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LogoEffectManager : MonoBehaviour, ICMInterface
+public class LogoEffectManager : MonoBehaviour
 {
     private const string nextSceneName = "security-related";
     
@@ -33,17 +33,19 @@ public class LogoEffectManager : MonoBehaviour, ICMInterface
         InitLogoEffectManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.IMG_LogoEffect == null)
-        {
-            this.IMG_LogoEffect = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("MainCanvas"), "IMG_LogoEffect", true).GetComponent<Image>();
-        }
+        CMObjectManager.CheckNullAndFindImageInAllChild(ref this.IMG_LogoEffect, GameObject.Find("MainCanvas"), "IMG_LogoEffect", true);
     }
 
     private void InitLogoEffectManager()
     {
-        // 1. setting data
+        InitLogoEffectInformation();
+        StartCoroutine(CoroutineLogoFadeEffect(1.0f, true));
+    }
+
+    private void InitLogoEffectInformation()
+    {
         this.info.logoEffectBeginColor = Color.white;
 
         this.info.beginDelayTerm = 0.75f;
@@ -52,9 +54,6 @@ public class LogoEffectManager : MonoBehaviour, ICMInterface
 
         this.info.effectDelayTerm = 0.125f;
         this.info.fadeAlphaWeight = 0.15f;
-
-        // 2. effect start
-        StartCoroutine(CoroutineLogoFadeEffect(1.0f, true));
     }
 
     private IEnumerator CoroutineLogoFadeEffect(float alphaValue, bool isFadeIn)
@@ -70,7 +69,6 @@ public class LogoEffectManager : MonoBehaviour, ICMInterface
 
         while (true)
         {
-            // 1. FadeIn
             if (isFadeIn == true && alphaValue <= 0.0f)
             {
                 yield return new WaitForSeconds(this.info.middleDelayTerm);
@@ -78,7 +76,6 @@ public class LogoEffectManager : MonoBehaviour, ICMInterface
                 isFadeIn = false;
                 alphaValue = 0.0f;
             }
-            // 2. FadeOut
             else if (isFadeIn == false && alphaValue >= 1.0f)
             {
                 yield return new WaitForSeconds(this.info.endDelayTerm);

@@ -3,27 +3,21 @@
 using Firebase.Auth;
 using Firebase.Extensions;
 
-public class LoginManager : MonoBehaviour, ICMInterface
+public class LoginManager : MonoBehaviour
 {
     public IntroNicknameManager introNicknameManager;
 
     private void Start()
     {
         PrepareBaseObjects();
-        InitLoginManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         if (this.introNicknameManager == null)
         {
             this.introNicknameManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Manager"), "IntroNicknameManager", true).GetComponent<IntroNicknameManager>();
         }
-    }
-
-    private void InitLoginManager()
-    {
-
     }
 
     public void SignInWithAnonymously(string nickname)

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class VillageUIManager : MonoBehaviour, ICMInterface
+public class VillageUIManager : MonoBehaviour
 {
+    private const float kVillageInitialXposition = 0.0f;
     private const float kVillageWidth = 180.0f;
 
     public class VillageUIInformation
@@ -22,6 +22,8 @@ public class VillageUIManager : MonoBehaviour, ICMInterface
     private Text TXT_UserCoin;
     private RectTransform RT_Villages;
 
+    private bool isVillageMove;
+
     private void Awake()
     {
         this.info = new VillageUIInformation();
@@ -33,24 +35,13 @@ public class VillageUIManager : MonoBehaviour, ICMInterface
         InitVillageUIManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         GameObject mainCanvas = GameObject.Find("MainCanvas");
 
-        if (this.TXT_UserNickname == null)
-        {
-            this.TXT_UserNickname = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "TXT_UserNickname", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_UserCoin == null)
-        {
-            this.TXT_UserCoin = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "TXT_UserCoin", true).GetComponent<Text>();
-        }
-
-        if (this.RT_Villages == null)
-        {
-            this.RT_Villages = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "Villages", true).GetComponent<RectTransform>();
-        }
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_UserNickname, mainCanvas, "TXT_UserNickname", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_UserCoin, mainCanvas, "TXT_UserCoin", true);
+        CMObjectManager.CheckNullAndFindRectTransformInAllChild(ref this.RT_Villages, mainCanvas, "Villages", true);
     }
 
     private void InitVillageUIManager()
@@ -72,7 +63,7 @@ public class VillageUIManager : MonoBehaviour, ICMInterface
 
         this.info.villageMoveSpeed = 3.0f;
 
-        // TO DO : test
+        // TEST CODE
         this.TXT_UserNickname.text = "NICKNAME : " + this.info.userNickname;
         this.TXT_UserCoin.text = "COIN : " + this.info.userCoin;
     }
@@ -92,9 +83,34 @@ public class VillageUIManager : MonoBehaviour, ICMInterface
         StartCoroutine(CoroutineMoveVillages(isLeft));
     }
 
+    public void MoveVillagesToRight()
+    {
+        StartCoroutine(CoroutineMoveVillages(false));
+    }
+
+    public void MoveVillageToLeft()
+    {
+        StartCoroutine(CoroutineMoveVillages(true));
+    }
+
+    private bool IsValidVillagesPosition()
+    {
+        if (this.RT_Villages.anchoredPosition.x > kVillageInitialXposition)
+        {
+            return false;
+        }
+
+        if (this.RT_Villages.anchoredPosition.x < -kVillageWidth)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private IEnumerator CoroutineMoveVillages(bool isLeft)
     {
-        if (this.RT_Villages == null)
+        if (this.RT_Villages == null || this.isVillageMove == true)
         {
             yield break;
         }
@@ -105,33 +121,41 @@ public class VillageUIManager : MonoBehaviour, ICMInterface
         float moveWeight = (isLeft == true) ? -1.0f : 1.0f;
         Vector2 v = Vector2.zero;
 
+        this.isVillageMove = true;
         moveWeight *= this.info.villageMoveSpeed;
 
-        while (true)
+        while (Math.Abs(currentTravelDistance) < targetTravelDistance)
         {            
             v.x = this.RT_Villages.anchoredPosition.x + moveWeight;
             v.y = this.RT_Villages.anchoredPosition.y;
             this.RT_Villages.anchoredPosition = v;
 
-            // 현재 이동 거리 갱신
             currentTravelDistance += moveWeight;
 
-            // 목표 이동 거리를 이동했을 경우 break
-            if (Math.Abs(currentTravelDistance) >= targetTravelDistance)
+            if (IsValidVillagesPosition() == false)
             {
-                break;
+                yield break;
             }
-
-            yield return WFS;
+            else
+            {
+                yield return WFS;
+            }
         }
 
-        // 오차 보정
-        float lastWeight = (isLeft == true) ? -1.0f : 1.0f;
-        lastWeight *= Math.Abs(currentTravelDistance) - targetTravelDistance;
+        this.RT_Villages.anchoredPosition = MoveVillageErrorCorrection(this.RT_Villages.anchoredPosition, isLeft, currentTravelDistance, targetTravelDistance); ;
+        this.isVillageMove = false;
+    }
 
-        v.x = this.RT_Villages.anchoredPosition.x + lastWeight;
-        v.y = this.RT_Villages.anchoredPosition.y;
-        this.RT_Villages.anchoredPosition = v;
+    private Vector2 MoveVillageErrorCorrection(Vector2 anchoredPosition, bool isLeft, float currentTravelDistance, float targetTravelDistance)
+    {
+        float lastWeight = Math.Abs(currentTravelDistance) - targetTravelDistance;
+        lastWeight *= (isLeft == true) ? -1.0f : 1.0f;
+
+        Vector2 v = new Vector2();
+        v.x = anchoredPosition.x + lastWeight;
+        v.y = anchoredPosition.y;
+
+        return v;
     }
 
 #if (CHEAT_MODE)

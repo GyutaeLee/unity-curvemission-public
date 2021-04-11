@@ -3,28 +3,22 @@
 /*
  * "TOP" UI 오브젝트에 붙이면 자동으로 Safe Area 대응하는 코드
  */
-public class UISafeAreaManager : MonoBehaviour, ICMInterface
+public class UISafeAreaManager : MonoBehaviour
 {
     private RectTransform rectTransform;
 
     private void Start()
     {
         PrepareBaseObjects();
-        InitUISafeAreaManager();
         ApplySafeAreaPosition();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         if (this.rectTransform == null)
         {
             this.rectTransform = this.gameObject.GetComponent<RectTransform>();
         }
-    }
-
-    private void InitUISafeAreaManager()
-    {
-
     }
 
     public void ApplySafeAreaPosition()

@@ -2,9 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LoadingManager : MonoBehaviour, ICMInterface
+public class LoadingManager : MonoBehaviour
 {
-    public static LoadingManager instance = null;
+    private static LoadingManager _instance = null;
+    public static LoadingManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     private Dictionary<string, bool> currentLoadingFlags;
     private Dictionary<string, int> currentLoadingKeys;
@@ -22,7 +33,6 @@ public class LoadingManager : MonoBehaviour, ICMInterface
     private void Start()
     {
         PrepareBaseObjects();
-        InitLoadingManager();
     }
 
     private void InitInstance()
@@ -38,23 +48,14 @@ public class LoadingManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        this.loadingCanvasObject = CMObjectManager.FindGameObjectInAllChild(this.gameObject, "loadingCanvas", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.loadingCanvasObject, this.gameObject, "loadingCanvas", true);
 
-        // loadingFlag
         this.currentLoadingFlags = new Dictionary<string, bool>();
-
-        // loadingKey
         this.currentLoadingKeys = new Dictionary<string, int>();
 
-        // prefab
         this.progressCirclePrefab = Resources.Load("security-related") as GameObject;
-    }
-
-    private void InitLoadingManager()
-    {
-
     }
 
     private void ActiveLoadingCanvas(bool isActive)
@@ -77,28 +78,17 @@ public class LoadingManager : MonoBehaviour, ICMInterface
         this.loadingCanvasObject.SetActive(isActive);
     }
 
-    // TO DO : 로딩 시간이 1초 이상 걸리지 않을 때에는 그냥 깜빡이기만해서,, 차라리 안 켜는건 어떨까?
     public void OpenProgressCircle(string loadingKey)
     {
-        // 로딩 키를 가지고 있지 않으면 하나 추가해준다.
-        if (this.currentLoadingKeys.ContainsKey(loadingKey) == false)
-        {
-            this.currentLoadingKeys.Add(loadingKey, 0);
-        }
+        IncreaseCurrentLoadingKey(loadingKey);
 
-        // 로딩 키 값 +1
-        this.currentLoadingKeys[loadingKey] += this.currentLoadingKeys[loadingKey] + 1;
-
-        // 이미 프로그레스 서클이 켜져있으면 key에만 추가한다.
-        if (this.progressCircleObject != null && this.progressCircleObject.activeSelf == true)
+        if (IsProgressCircleEnable() == true)
         {
             return;
         }
 
-        // 1. 로딩 캔버스를 켜준다.
         ActiveLoadingCanvas(true);
 
-        // 2. 프로그레서 서클을 인스턴싱 후 켜준다.
         this.progressCircleObject = Instantiate(this.progressCirclePrefab, this.loadingCanvasObject.transform);
         this.progressCircleObject.SetActive(true);
     }
@@ -110,20 +100,57 @@ public class LoadingManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        if (this.currentLoadingKeys[loadingKey] <= 1)
-        {
-            this.currentLoadingKeys.Remove(loadingKey);
-        }
-        else
-        {
-            this.currentLoadingKeys[loadingKey] = this.currentLoadingKeys[loadingKey] - 1;
-        }
+        DecreaseCurrentLoadingKey(loadingKey);
 
         if (this.currentLoadingKeys.Count == 0)
         {
             Destroy(this.progressCircleObject);
             ActiveLoadingCanvas(false);
         }
+    }
+
+    private object lock_object_increaseCurrentLoadingKey = new object();
+    private void IncreaseCurrentLoadingKey(string loadingKey)
+    {
+        lock (lock_object_increaseCurrentLoadingKey)
+        {
+            if (this.currentLoadingKeys.ContainsKey(loadingKey) == false)
+            {
+                this.currentLoadingKeys.Add(loadingKey, 0);
+            }
+            this.currentLoadingKeys[loadingKey] = this.currentLoadingKeys[loadingKey] + 1;
+        }
+    }
+
+    private object lock_object_decreaseCurrentLoadingKey = new object();
+    private void DecreaseCurrentLoadingKey(string loadingKey)
+    {
+        lock (lock_object_decreaseCurrentLoadingKey)
+        {
+            if (this.currentLoadingKeys[loadingKey] <= 1)
+            {
+                this.currentLoadingKeys.Remove(loadingKey);
+            }
+            else
+            {
+                this.currentLoadingKeys[loadingKey] = this.currentLoadingKeys[loadingKey] - 1;
+            }
+        }
+    }
+
+    private bool IsProgressCircleEnable()
+    {
+        if (this.progressCircleObject == null)
+        {
+            return false;
+        }
+
+        if (this.progressCircleObject.activeSelf == true)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /* In Multi Thread */
@@ -133,6 +160,11 @@ public class LoadingManager : MonoBehaviour, ICMInterface
         string flagKey = loadingKey + "_" + this.currentLoadingFlags.Count;
 
         return flagKey;
+    }
+
+    public void CloseScheduledProgressCircle(string flagKey)
+    {
+        SetLoadingFlag(flagKey, false);
     }
 
     public void SetLoadingFlag(string flagKey, bool isEnabled)
@@ -147,13 +179,13 @@ public class LoadingManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void ScheduleCloseProgressCircleInOtheThread(string loadingKey, string flagKey)
+    public void ScheduleCloseProgressCircle(string loadingKey, string flagKey)
     {
-        SetLoadingFlag(flagKey, false);
-        StartCoroutine(CoroutineCloseProgressCircleInOtherThread(loadingKey, flagKey));
+        SetLoadingFlag(flagKey, true);
+        StartCoroutine(CoroutineCloseProgressCircle(loadingKey, flagKey));
     }
 
-    private IEnumerator CoroutineCloseProgressCircleInOtherThread(string loadingKey, string flagKey)
+    private IEnumerator CoroutineCloseProgressCircle(string loadingKey, string flagKey)
     {
         while (true)
         {
@@ -162,7 +194,7 @@ public class LoadingManager : MonoBehaviour, ICMInterface
                 yield break;
             }
 
-            if (this.currentLoadingFlags[flagKey] == true)
+            if (this.currentLoadingFlags[flagKey] == false)
             {
                 break;
             }

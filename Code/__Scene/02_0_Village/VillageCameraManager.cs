@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 // deprecated . . . 미사용
-public class VillageCameraManager : MonoBehaviour, ICMInterface
+public class VillageCameraManager : MonoBehaviour
 {
     public class MainCameraInformation
     {
@@ -26,7 +26,6 @@ public class VillageCameraManager : MonoBehaviour, ICMInterface
     private void Start()
     {
         PrepareBaseObjects();
-        InitMainCameraManager();
     }
 
     private void Update()
@@ -34,17 +33,10 @@ public class VillageCameraManager : MonoBehaviour, ICMInterface
         MoveVillageCamera();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.cameraObject == null)
-        {
-            this.cameraObject = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Folder"), "MainCamera", true);
-        }
-
-        if (this._camera == null)
-        {
-            this._camera = this.cameraObject.GetComponent<Camera>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.cameraObject, GameObject.Find("Folder"), "MainCamera", true);
+        CMObjectManager.CheckNullAndFindCameraInAllChild(ref this._camera, GameObject.Find("Folder"), "MainCamera", true);
 
         this.info.cameraMoveSpeed = 9.0f;
         this.info.prevDistance = 0.0f;
@@ -54,11 +46,6 @@ public class VillageCameraManager : MonoBehaviour, ICMInterface
         this.info.maxPosition = new Vector2(2.5f, 0.0f);
     }
 
-    private void InitMainCameraManager()
-    {
-
-    }
-        
     public void MoveVillageCamera()
     {
 #if (UNITY_ANDROID || UNITY_IOS) && (!UNITY_EDITOR)

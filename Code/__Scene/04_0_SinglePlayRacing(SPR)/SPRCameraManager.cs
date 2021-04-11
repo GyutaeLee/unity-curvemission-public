@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class SPRCameraManager : MonoBehaviour, ICMInterface
+public class SPRCameraManager : MonoBehaviour
 {
     public class SPRCameraInformation
     {
@@ -32,28 +32,13 @@ public class SPRCameraManager : MonoBehaviour, ICMInterface
         MoveCamera();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.cameraObject == null)
-        {
-            this.cameraObject = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Folder"), "MainCamera", true);
-        }
-
-        if (this._camera == null)
-        {
-            this._camera = this.cameraObject.GetComponent<Camera>();
-        }
-
-        if (this.carObject == null)
-        {
-            this.carObject = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Game"), "SPRCar", true);
-        }
-
-        if (this.info.carCurrentTransform == null)
-        {
-            this.info.carCurrentTransform = this.carObject.transform;
-        }
-
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.cameraObject, GameObject.Find("Folder"), "MainCamera", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.carObject, GameObject.Find("Game"), "SPRCar", true);
+        CMObjectManager.CheckNullAndFindCameraInAllChild(ref this._camera, GameObject.Find("Folder"), "MainCamera", true);
+        CMObjectManager.CheckNullAndFindTransformInAllChild(ref this.info.carCurrentTransform, GameObject.Find("Game"), "SPRCar", true);
+        
         if (this.sprCarManager == null)
         {
             this.sprCarManager = this.carObject.GetComponent<SPRCarManager>();
@@ -78,49 +63,30 @@ public class SPRCameraManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        // TO DO : 나중에 가중치들 따로 변수에 넣어서 열거체와 동일한 인덱스로 대입하기
-        float xCarStateWeight = 0.0f, xSpeedWeight = 0.0f;
-        float yCarStateWeight = 0.0f, ySpeedWeight = 0.0f;
-
+        float xCarStateWeight = 0.0f, yCarStateWeight = 0.0f;
         switch (sprCarManager.GetCurrentCarState())
         {
             case ECarState.Forward:
                 xCarStateWeight = 0.75f;
                 yCarStateWeight = 1.0f;
-
-                xSpeedWeight = 0.75f;
-                ySpeedWeight = 0.5f;
                 break;
             case ECarState.Left:
                 xCarStateWeight = -0.75f;
                 yCarStateWeight = 1.0f;
-
-                xSpeedWeight = -1.0f;
-                ySpeedWeight = 0.5f;
                 break;
             case ECarState.Back:
                 xCarStateWeight = -0.75f;
                 yCarStateWeight = -1.0f;
-
-                xSpeedWeight = -0.75f;
-                ySpeedWeight = -0.5f;
                 break;
             case ECarState.Right:
                 xCarStateWeight = 0.75f;
                 yCarStateWeight = -1.0f;
-
-                xSpeedWeight = 1.0f;
-                ySpeedWeight = -0.5f;
                 break;
             default:
+                xCarStateWeight = 0.0f;
+                yCarStateWeight = 0.0f;
                 break;
         }
-
-        // TO DO : 효과 좀 더 고민하기 -> 베지어 곡선 써보자
-        //float speedRate = _SPRCarManager.info.currentSpeed / _SPRCarManager.info.maxSpeed;
-
-        //xCarStateWeight += xSpeedWeight * speedRate;
-        //yCarStateWeight += ySpeedWeight * speedRate;
 
         this.info.cameraNextPositionVector.x = this.info.carCurrentTransform.position.x + xCarStateWeight;
         this.info.cameraNextPositionVector.y = this.info.carCurrentTransform.position.y + yCarStateWeight;

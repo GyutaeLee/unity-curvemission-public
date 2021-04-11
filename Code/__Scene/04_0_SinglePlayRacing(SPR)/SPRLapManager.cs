@@ -2,9 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SPRLapManager : MonoBehaviour, ICMInterface
+public class SPRLapManager : MonoBehaviour
 {
-    public const float kNoneLapTime = -1;
+    private const float kNoneLapTime = -1;
 
     public class LapInformation
     {
@@ -12,6 +12,7 @@ public class SPRLapManager : MonoBehaviour, ICMInterface
         public int finishLapCount;
 
         public float currentLapTime;
+        public float resultLapTime;
     }
 
     private LapInformation info;
@@ -30,12 +31,9 @@ public class SPRLapManager : MonoBehaviour, ICMInterface
         InitSPRLapManager();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.IMG_LastLap == null)
-        {
-            this.IMG_LastLap = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("MainCanvas"), "IMG_LastLap", true).GetComponent<Image>();
-        }
+        CMObjectManager.CheckNullAndFindImageInAllChild(ref this.IMG_LastLap, GameObject.Find("MainCanvas"), "IMG_LastLap", true);
     }
 
     private void InitSPRLapManager()
@@ -52,6 +50,16 @@ public class SPRLapManager : MonoBehaviour, ICMInterface
         }
 
         this.info.currentLapTime += Time.deltaTime;
+    }
+
+    public void CalculateResultLapTime()
+    {
+        this.info.resultLapTime = this.info.currentLapTime;
+    }
+
+    public float GetResultLapTime()
+    {
+        return this.info.resultLapTime;
     }
 
     public void SetCurrentLapCount(int lapCount)
@@ -74,16 +82,11 @@ public class SPRLapManager : MonoBehaviour, ICMInterface
         return false;
     }
 
-    public void StartCoroutineBlinkLastLapUI(Image img)
+    public void StartCoroutineBlinkLastLapUI()
     {
-        if (img == null)
-        {
-            img = this.IMG_LastLap;
-        }
-
-        SoundManager.instance.PlaySoundSeveralTimes(ESoundType.ETC, (int)ESoundETC.LastLap, 2);
-
+        Image img = this.IMG_LastLap;
         StartCoroutine(CoroutineBlinkLastLapUI(img, 0.1f));
+        SoundManager.instance.PlaySoundSeveralTimes(ESoundType.ETC, (int)ESoundETC.LastLap, 2);
     }
 
     private IEnumerator CoroutineBlinkLastLapUI(Image img, float blinkTerm)
@@ -112,6 +115,12 @@ public class SPRLapManager : MonoBehaviour, ICMInterface
     }
 
     /* etc */
+
+    public static float GetNoneLapTime()
+    {
+        return kNoneLapTime;
+    }
+
 
     public float GetCurrentLapTime()
     {

@@ -6,48 +6,53 @@ using Newtonsoft.Json;
 
 public class UserManager : MonoBehaviour
 {
-    public static UserManager instance = null;
+    private static UserManager _instance = null;
+    public static UserManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class UserInformation
     {
         public struct Infos
         {
-            public string email;                                            
-            public string nickname;                                         
-            public string startDate;                                        
-            public bool isBanUser;                                          
-            public bool isTestUser;                                         
+            public string email;                                            // eamil
+            public string nickname;                                         // nickname
+            public string startDate;                                        // start_date
+            public bool isBanUser;                                          // ban_user
+            public bool isTestUser;                                         // test_user
         }
 
         public Infos infos;
 
-        public Dictionary<string, int> avatar;                              
+        public Dictionary<string, int> avatar;                              // hair, head, earring, face, top, hand, bottom, shoe
 
-        public int coin_1;                                                  
-        public Dictionary<string, int> energy_1;                            
+        public int coin_1;                                                  // coin_1
+        public Dictionary<string, int> energy_1;                            // energy_1 { current, max }
 
-        public Dictionary<string, Dictionary<int, bool>> avatarInventory;   
+        public Dictionary<string, Dictionary<int, bool>> avatarInventory;   // hairs, heads, earrings, faces, tops, hands, bottoms, shoes
 
-        public Dictionary<string, Dictionary<int, Dictionary<int, bool>>> carInventory;      
+        public Dictionary<string, Dictionary<int, Dictionary<int, bool>>> carInventory;      // cars, paints, parts
 
-        public Dictionary<int, bool> ownedStages;                           
-        public Dictionary<int, Dictionary<string, float>> srRecords;        
+        public Dictionary<int, bool> ownedStages;                           // stgaes { 1001, true}
+        public Dictionary<int, Dictionary<string, float>> srRecords;        // records { time(string), car, paint}
     }
 
     private UserInformation info;
 
-    // TO DO : 더 좋은 위치 고민하기
     private string beforeSceneName;
 
     private void Awake()
     {
         InitInstance();
         this.info = new UserInformation();
-    }
-
-    private void Start()
-    {
-        InitUserManager();
     }
 
     private void InitInstance()
@@ -61,11 +66,6 @@ public class UserManager : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
-    }
-
-    private void InitUserManager()
-    {
-
     }
 
     private void OnEnable()
@@ -92,26 +92,31 @@ public class UserManager : MonoBehaviour
 
         instance.info = new UserInformation();
 
+        /* avatar */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.avatar = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonData);
 
+        /* goods */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.coin_1 = JsonConvert.DeserializeObject<int>(jsonData);
 
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.energy_1 = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonData);
 
+        /* infos */
         instance.info.infos.email = ServerManager.instance.GetFirebasUserEmail();
         instance.info.infos.nickname = nickname;
         instance.info.infos.startDate = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:s");
         instance.info.infos.isTestUser = false;
 
+        /* inventory */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.avatarInventory = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, bool>>>(jsonData);
 
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.carInventory = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, Dictionary<int, bool>>>>(jsonData);
 
+        /* single_racing */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.ownedStages = JsonConvert.DeserializeObject<Dictionary<int, bool>>(jsonData);
 
@@ -123,15 +128,18 @@ public class UserManager : MonoBehaviour
     {
         string jsonData;
 
+        /* avatar */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.avatar = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonData);
 
+        /* goods */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.coin_1 = JsonConvert.DeserializeObject<int>(jsonData);
 
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.energy_1 = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonData);
 
+        /* infos */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.infos.email = JsonConvert.DeserializeObject<string>(jsonData);
 
@@ -144,12 +152,14 @@ public class UserManager : MonoBehaviour
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.infos.isTestUser = JsonConvert.DeserializeObject<bool>(jsonData);
 
+        /* inventory */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.avatarInventory = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, bool>>>(jsonData);
 
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.carInventory = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, Dictionary<int, bool>>>>(jsonData);
 
+        /* single_racing */
         jsonData = snapshot.Child("security-related").GetRawJsonValue();
         instance.info.ownedStages = JsonConvert.DeserializeObject<Dictionary<int, bool>>(jsonData);
 

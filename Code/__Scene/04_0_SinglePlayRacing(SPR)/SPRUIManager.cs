@@ -1,15 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class SPRUIManager : MonoBehaviour, ICMInterface
+public class SPRUIManager : MonoBehaviour
 {
-    public class SPRUIInformation
-    {
-
-    }
-
-    public SPRUIInformation info;
-    
     private GameObject CANVAS_Pause;
 
     private GameObject CANVAS_Playing;
@@ -25,7 +18,8 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
     private Text TXT_DeathLapTime;
     private Text TXT_DeathCoin;
 
-    private SPRGameManager gameManager;
+    private SPRGameManager sprGameManager;
+    private SPRLapManager sprLapManager;
 
 #if (DEBUG_MODE)
     public float deltaTime;
@@ -37,11 +31,6 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
     public Text TXT_CurrentFrame;
     public Text TXT_WorstFrame;
 #endif
-
-    private void Awake()
-    {
-        this.info = new SPRUIInformation();
-    }
 
     private void Start()
     {
@@ -58,86 +47,36 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
 #endif
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         GameObject mainCanvas = GameObject.Find("MainCanvas");
 
-        if (this.CANVAS_Pause == null)
-        {
-            this.CANVAS_Pause = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Pause", true);
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Pause, mainCanvas, "CANVAS_Pause", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Playing, mainCanvas, "CANVAS_Playing", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Finish, mainCanvas, "CANVAS_Finish", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Death, mainCanvas, "CANVAS_Death", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_CurrentLapTime, this.CANVAS_Playing, "TXT_CurrentLapTime", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_CurrentCoin, this.CANVAS_Playing, "TXT_CurrentCoin", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_CurrentLapCount, this.CANVAS_Playing, "TXT_CurrentLapCount", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_FinishLapTime, this.CANVAS_Finish, "TXT_FinishLapTime", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_FinishCoin, this.CANVAS_Finish, "TXT_FinishCoin", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_DeathLapTime, this.CANVAS_Death, "TXT_DeathLapTime", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_DeathCoin, this.CANVAS_Death, "TXT_DeathCoin", true);
 
-        if (this.CANVAS_Playing == null)
-        {
-            this.CANVAS_Playing = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Playing", true);
-        }
+        this.sprGameManager = SPRGameManager.instance;
 
-        if (this.TXT_CurrentLapTime == null)
+        if (this.sprLapManager == null)
         {
-            this.TXT_CurrentLapTime = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Playing, "TXT_CurrentLapTime", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_CurrentCoin == null)
-        {
-            this.TXT_CurrentCoin = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Playing, "TXT_CurrentCoin", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_CurrentLapCount == null)
-        {
-            this.TXT_CurrentLapCount = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Playing, "TXT_CurrentLapCount", true).GetComponent<Text>();
-        }
-
-        if (this.CANVAS_Finish == null)
-        {
-            this.CANVAS_Finish = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Finish", true);
-        }
-
-        if (this.TXT_FinishLapTime == null)
-        {
-            this.TXT_FinishLapTime = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Finish, "TXT_FinishLapTime", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_FinishCoin == null)
-        {
-            this.TXT_FinishCoin = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Finish, "TXT_FinishCoin", true).GetComponent<Text>();
-        }
-
-        if (this.CANVAS_Death == null)
-        {
-            this.CANVAS_Death = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Death", true);
-        }
-
-        if (this.TXT_DeathLapTime == null)
-        {
-            this.TXT_DeathLapTime = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Death, "TXT_DeathLapTime", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_DeathCoin == null)
-        {
-            this.TXT_DeathCoin = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Death, "TXT_DeathCoin", true).GetComponent<Text>();
+            this.sprLapManager = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Manager"), "SPRLapManager", true).GetComponent<SPRLapManager>();
         }
 
         this.CANVAS_Playing.SetActive(true);
         this.CANVAS_Playing.SetActive(false);
 
-        this.gameManager = SPRGameManager.instance;
-        this.TXT_CurrentLapCount.text = string.Format("{0:d} / {1:d}", this.gameManager.sprLapManager.GetCurrentLapCount(), this.gameManager.sprLapManager.GetFinishLapCount());
-
 #if (DEBUG_MODE)
-        if (this.CANVAS_Debug == null)
-        {
-            this.CANVAS_Debug = CMObjectManager.FindGameObjectInAllChild(mainCanvas, "CANVAS_Debug", true);
-        }
-
-        if (this.TXT_CurrentFrame == null)
-        {
-            this.TXT_CurrentFrame = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Debug, "TXT_CurrentFrame", true).GetComponent<Text>();
-        }
-
-        if (this.TXT_WorstFrame == null)
-        {
-            this.TXT_WorstFrame = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Debug, "TXT_WorstFrame", true).GetComponent<Text>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Debug, mainCanvas, "CANVAS_Debug", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_CurrentFrame, this.CANVAS_Playing, "TXT_CurrentFrame", true);
+        CMObjectManager.CheckNullAndFindTextInAllChild(ref this.TXT_WorstFrame, this.CANVAS_Playing, "TXT_WorstFrame", true);
 
         this.CANVAS_Debug.SetActive(true);
         this.worstFPS = 999;
@@ -146,7 +85,7 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
 
     private void InitSPRUIManager()
     {
-
+        this.TXT_CurrentLapCount.text = string.Format("{0:d} / {1:d}", this.sprLapManager.GetCurrentLapCount(), this.sprLapManager.GetFinishLapCount());
     }
       
 
@@ -170,9 +109,6 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
     public void FinishGame()
     {
         this.CANVAS_Playing.SetActive(false);
-
-        // TO DO : 관련 UI 띄우기
-        FailGame();
     }
 
     public void FailGame()
@@ -181,7 +117,7 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
 
         this.CANVAS_Death.SetActive(true);
 
-        this.TXT_DeathLapTime.text = string.Format("{0:N3}", this.gameManager.sprLapManager.GetCurrentLapTime());
+        this.TXT_DeathLapTime.text = string.Format("{0:N3}", this.sprLapManager.GetCurrentLapTime());
     }
 
     public void UpdateUILapTime()
@@ -191,17 +127,17 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        this.TXT_CurrentLapTime.text = string.Format("{0:N3}", this.gameManager.sprLapManager.GetCurrentLapTime());
+        this.TXT_CurrentLapTime.text = string.Format("{0:N3}", this.sprLapManager.GetCurrentLapTime());
     }
 
-    public void UpdateUICoin()
+    public void RefreshUICoin()
     {
         if (SPRGameManager.instance.IsGameStatePlaying() == false)
         {
             return;
         }
 
-        this.TXT_CurrentCoin.text = this.gameManager.GetCoinQuantity().ToString();
+        this.TXT_CurrentCoin.text = this.sprGameManager.GetCoinQuantity().ToString();
     }
 
     public void UpdateUILapCount()
@@ -211,7 +147,7 @@ public class SPRUIManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        this.TXT_CurrentLapCount.text = string.Format("{0:d} / {1:d}", this.gameManager.sprLapManager.GetCurrentLapCount(), this.gameManager.sprLapManager.GetFinishLapCount());
+        this.TXT_CurrentLapCount.text = string.Format("{0:d} / {1:d}", this.sprLapManager.GetCurrentLapCount(), this.sprLapManager.GetFinishLapCount());
     }
 
     public void PlayUISound(int soundIndex)

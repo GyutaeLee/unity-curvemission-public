@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 using Newtonsoft.Json;
 
 using Firebase.Database;
 
 // TO DO : UI 코드 나누기
-public class SPRRankingManager : MonoBehaviour, ICMInterface
+public class SPRRankingManager : MonoBehaviour
 {
     public class SPRRankingInformation
     {
-        public Dictionary<string, int> avatar;        
+        public Dictionary<string, int> avatar;        // hair, head, earring, face, top, hand, bottom, shoe
+        public Dictionary<string, float> srRecords;   // records { time, car, paint}
 
-        public Dictionary<string, float> srRecords;   
-
-        public string nickname;                       
+        public string nickname;                       // nickname
         public string uid;
     }
 
@@ -34,17 +34,11 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
     private Dictionary<int, List<SPRRankingInformation>> sprRankingInfo;
 
     private DataSnapshot dataSnapshot = null;
-    private bool isDone = false; // TO DO : 함수별로 여러 쓰레드 사용할 떄 어떻게 나눌지 고민하기
+    private bool thread_wait_requestRanking = false;
 
     private void Start()
     {
-        PrepareBaseObjects();
         InitRankingManager();
-    }
-
-    public void PrepareBaseObjects()
-    {
-
     }
 
     private void InitRankingManager()
@@ -54,11 +48,18 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
 
     private IEnumerator CoroutineInitSPRRanking()
     {
+        InActiveThreadRequestRanking();
         RequestSPRRankingFromFirebaseDB();
 
-        while (this.isDone == false)
+        delegateGetFlag delegateGetFlag = new delegateGetFlag(GetThreadRequestRanking);
+        yield return StartCoroutine(CMDelegate.CoroutineThreadWait(delegateGetFlag));
+
+        if (GetThreadRequestRanking() == false)
         {
-            yield return null;
+            string errorText = string.Format(TextManager.instance.GetText(ETextType.Game, (int)EGameText.Error), EnumError.GetEGameErrorCodeString(EGameError.ThreadWaitTimeOver));
+            PopupManager.instance.OpenCheckPopup(errorText);
+            SceneManager.LoadScene(UserManager.instance.GetBeforeSceneName());            
+            yield break;
         }
 
         SetSPRRanking();
@@ -98,15 +99,19 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
             SPRRankingInformation SPRRankingInfo = new SPRRankingInformation();
             string jsonData;
 
+            // avatar
             jsonData = child.Child("security-related").GetRawJsonValue();
             SPRRankingInfo.avatar = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonData);
 
+            // records
             jsonData = child.Child("security-related").GetRawJsonValue();
             SPRRankingInfo.srRecords = JsonConvert.DeserializeObject<Dictionary<string, float>>(jsonData);
 
+            // nickname
             jsonData = child.Child("security-related").GetRawJsonValue();
             SPRRankingInfo.nickname = JsonConvert.DeserializeObject<string>(jsonData);
 
+            // uid
             jsonData = child.Child("security-related").GetRawJsonValue();
             SPRRankingInfo.uid = JsonConvert.DeserializeObject<string>(jsonData);
 
@@ -132,13 +137,14 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
             GameObject indexObject = CMObjectManager.FindGameObjectInAllChild(stageObject, rankingIndex.ToString(), true);
             SPRRankingUI tUI = new SPRRankingUI();
 
-            // avatar
+            // avatar                        
+            //tUI.IMG_topRankerAvatar = 
 
             // records
             tUI.IMG_topRankerBestLapCar = CMObjectManager.FindGameObjectInAllChild(indexObject, "IMG_topRankerBestLapCar", true).GetComponent<Image>();
 
             // Load the sprites from a sprite sheet file (png).
-            string carSpriteSheetName = "Texture/CarItem/Car/" + (int)rankingInfo.srRecords["security-related"] + "/" + (int)rankingInfo.srRecords["security-related"];
+            string carSpriteSheetName = "security-related" + (int)rankingInfo.srRecords["security-related"] + "/" + (int)rankingInfo.srRecords["security-related"];
             tUI.SPT_topRankerBestLapCar = Resources.Load<Sprite>(carSpriteSheetName);
             tUI.IMG_topRankerBestLapCar.sprite = tUI.SPT_topRankerBestLapCar;
 
@@ -158,7 +164,7 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
     {
         string baseKey = "security-related";
 
-        FirebaseDatabase.DefaultInstance.GetReference(baseKey).LimitToFirst(ServerManager.kServerMaxRankingCount).
+        FirebaseDatabase.DefaultInstance.GetReference(baseKey).LimitToFirst(ServerManager.GetServerSPRRankingMaxCount()).
             GetValueAsync().ContinueWith(task =>
         {
             if (task.IsFaulted)
@@ -167,9 +173,24 @@ public class SPRRankingManager : MonoBehaviour, ICMInterface
             }
             else if (task.IsCompleted)
             {
-                this.isDone = true;
+                ActiveThreadRequestRanking();
                 this.dataSnapshot = task.Result;
             }
         });
+    }
+
+    private void ActiveThreadRequestRanking()
+    {
+        this.thread_wait_requestRanking = true;
+    }
+
+    private void InActiveThreadRequestRanking()
+    {
+        this.thread_wait_requestRanking = false;
+    }
+
+    private bool GetThreadRequestRanking()
+    {
+        return this.thread_wait_requestRanking;
     }
 }

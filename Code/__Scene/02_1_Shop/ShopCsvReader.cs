@@ -3,7 +3,18 @@ using UnityEngine;
 
 public class ShopCsvReader : MonoBehaviour
 {
-    public static ShopCsvReader instance = null;
+    private static ShopCsvReader _instance = null;
+    public static ShopCsvReader instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class ShopCarItemCommonInformation
     {
@@ -40,7 +51,6 @@ public class ShopCsvReader : MonoBehaviour
 
     private void Start()
     {
-        InitShopCsvReader();
         ReadCsvData();
     }
 
@@ -54,11 +64,6 @@ public class ShopCsvReader : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
-    }
-
-    private void InitShopCsvReader()
-    {
-        
     }
 
     private void ReadCsvData()

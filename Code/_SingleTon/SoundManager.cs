@@ -2,69 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ESoundType
+public class SoundManager : MonoBehaviour
 {
-    None = 0,
+    private static SoundManager _instance = null;
+    public static SoundManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
-    ETC         = 1,
-    UI          = 2,
-    Collision   = 3,
-    Car         = 4,
-
-    Max,
-}
-
-public enum ESoundETC
-{
-    None = 0,
-
-    CountDown   = 1,
-    Finish      = 2,
-    LastLap     = 3,
-
-    Max,
-}
-
-public enum ESoundUI
-{
-    None = 0,
-
-    ClickButton_1 = 1,
-
-    Max,
-}
-
-public enum ESoundCollision
-{
-    None = 0,
-
-    Rock_1        = 1,
-    Coin_1        = 2,
-    Booster_1     = 3,
-    Booster_2     = 4,
-
-    Max,
-}
-
-public enum ESoundCar
-{
-    None = 0,
-
-    Engine_1      = 1,
-    Drift_1       = 2,
-
-    Max,
-}
-
-public class SoundManager : MonoBehaviour, ICMInterface
-{
-    public static SoundManager instance = null;
-    const int kDefualtAudioSourceCount = 4;
-    const int kInvalidIndex = -1;
-
+    private const int kInvalidIndex = -1;
+    private const int kDefualtAudioSourceCount = 4;
+    
     public class SoundInformation
     {
-        public bool isSoundOff;
+        public bool isSoundOn;
         public float soundVolume;
     }
 
@@ -98,9 +56,9 @@ public class SoundManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        this.info.isSoundOff = SecurityPlayerPrefs.GetInt("security-related", 0) == 1 ? true : false;
+        this.info.isSoundOn = SecurityPlayerPrefs.GetBool("security-related", true);
         this.info.soundVolume = 1.0f - SecurityPlayerPrefs.GetFloat("security-related", 1.0f);
     }
 
@@ -147,7 +105,7 @@ public class SoundManager : MonoBehaviour, ICMInterface
             // TO DO : 필요한것만 들고 있도록 변경
             for (int j = 1; j < count; j++)
             {
-                string s = string.Format("security-related{0}{1:d}", soundResourceName, j);
+                string s = string.Format("security-related/{0}{1:d}", soundResourceName, j);
                 l.Add(Resources.Load(s) as AudioClip);
             }
 
@@ -155,21 +113,21 @@ public class SoundManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PlaySound(ESoundType eSoundType, int soundIndex)
+    public int PlaySound(ESoundType eSoundType, int soundIndex)
     {
-        if (this.info.isSoundOff == true)
+        if (this.info.isSoundOn == false)
         {
-            return;
+            return kInvalidIndex;
         }
 
         if (eSoundType <= ESoundType.None || eSoundType >= ESoundType.Max)
         {
-            return;
+            return kInvalidIndex;
         }
 
         if (soundIndex <= 0 || soundIndex > this.AC_Sound[(int)eSoundType - 1].Count)
         {
-            return;
+            return kInvalidIndex;
         }
 
         int audioIndex = GetAvailableAudioIndex();
@@ -182,6 +140,36 @@ public class SoundManager : MonoBehaviour, ICMInterface
 
         this.AS_Sound[audioIndex].clip = this.AC_Sound[(int)eSoundType - 1][soundIndex - 1];
         this.AS_Sound[audioIndex].Play();
+
+        return audioIndex;
+    }
+
+    public int PlaySoundLoop(ESoundType eSoundType, int soundIndex)
+    {
+        int audioIndex = PlaySound(eSoundType, soundIndex);
+
+        if (audioIndex != kInvalidIndex)
+        {
+            this.AS_Sound[audioIndex].loop = true;
+        }
+
+        return audioIndex;
+    }
+
+    public void StopSound(int audioIndex)
+    {
+        if (audioIndex == kInvalidIndex)
+        {
+            return;
+        }
+
+        if (audioIndex < 0 || audioIndex >= this.AS_Sound.Count)
+        {
+            return;
+        }
+
+        this.AS_Sound[audioIndex].loop = false;
+        this.AS_Sound[audioIndex].Stop();
     }
 
     public void PlaySoundSeveralTimes(ESoundType eSoundType, int soundIndex, int times)

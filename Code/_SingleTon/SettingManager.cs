@@ -2,7 +2,18 @@
 
 public class SettingManager : MonoBehaviour
 {
-    public static SettingManager instance = null;
+    private static SettingManager _instance = null;
+    public static SettingManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class SettingInformation
     {
@@ -37,6 +48,6 @@ public class SettingManager : MonoBehaviour
 
     private void InitSettingManager()
     {
-        this.info.eLanguageType = (ELanguageType)SecurityPlayerPrefs.GetInt("security-related", 1);
+        this.info.eLanguageType = (ELanguageType)SecurityPlayerPrefs.GetInt("security-related", (int)TextManager.GetDefaultLanguageType());
     }
 }

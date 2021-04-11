@@ -21,21 +21,10 @@ public class FadeEffectManager : MonoBehaviour
 
     public void InitFadeEffectInformation(ref FadeEffectInformation fadeEffectInformation, bool isFadeIn)
     {
-        if (this.CANVAS_Fade == null)
-        {
-            this.CANVAS_Fade = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("MainCanvas"), "CANVAS_Fade", true);
-            this.CANVAS_Fade.SetActive(true);
-        }
-
-        if (this.fadeObject == null)
-        {
-            this.fadeObject = CMObjectManager.FindGameObjectInAllChild(this.CANVAS_Fade, "FadeObject", true);
-        }
-
-        if (this.IMG_Fade == null)
-        {
-            this.IMG_Fade = this.fadeObject.GetComponent<Image>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.CANVAS_Fade, GameObject.Find("MainCanvas"), "CANVAS_Fade", true);
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.fadeObject, this.CANVAS_Fade, "FadeObject", true);
+        CMObjectManager.CheckNullAndFindImageInAllChild(ref this.IMG_Fade, this.CANVAS_Fade, "FadeObject", true);
+        this.CANVAS_Fade.SetActive(true);
 
         fadeEffectInformation.fadeBeginColor = Color.black;
         fadeEffectInformation.fadeBeginColor.a = isFadeIn == true ? 1.0f : 0.0f;

@@ -1,33 +1,22 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public enum ELanguageType
-{
-    None = 0,
-
-    Eng = 1,        // 영어
-    Kor = 2,        // 한국어
-    Jpa = 3,        // 일본어
-    Chi_Hant = 4,    // 중국어 - 번체
-    Chi_Hans = 5,    // 중국어 - 간체
-
-    Max,
-}
-
-public enum ETextType
-{
-    Game = 0,
-    Shop = 1,
-    Car = 2,
-    Paint = 3,
-    Parts = 4,
-
-    Max,
-}
-
 public class TextManager : MonoBehaviour
 {
-    public static TextManager instance = null;
+    private static TextManager _instance = null;
+    public static TextManager instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
+
+    private const ELanguageType kDefaultLanguageType = ELanguageType.Eng;
 
     private class TextInformation
     {
@@ -64,7 +53,7 @@ public class TextManager : MonoBehaviour
     {
         this.info.text = new List<Dictionary<string, string>>((int)ETextType.Max);
 
-        for (int i = 0; i < (int)ETextType.Max; i++)
+        for (int i = (int)ETextType.None + 1; i < (int)ETextType.Max; i++)
         {
             this.info.text.Add(new Dictionary<string, string>());
             ReadTextCsv(SettingManager.instance.info.eLanguageType, (ETextType)i);
@@ -78,19 +67,19 @@ public class TextManager : MonoBehaviour
         switch (eLanguageType)
         {
             case ELanguageType.Eng:
-                result = "security-related";
+                result = "Eng";
                 break;
             case ELanguageType.Kor:
-                result = "security-related";
+                result = "Kor";
                 break;
             case ELanguageType.Jpa:
-                result = "security-related";
+                result = "Jap";
                 break;
             case ELanguageType.Chi_Hant:
-                result = "security-related";
+                result = "Chi_Hant";
                 break;
             case ELanguageType.Chi_Hans:
-                result = "security-related";
+                result = "Chi_Hans";
                 break;
             default:
                 break;
@@ -129,7 +118,7 @@ public class TextManager : MonoBehaviour
 
     private void ReadTextCsv(ELanguageType eLanguageType, ETextType eTextType)
     {
-        string csvPath = "security-related" + ConvertETextTypeToCsvName(eTextType);
+        string csvPath = "security-related/" + ConvertETextTypeToCsvName(eTextType);
         CMCsvReader csvReader = new CMCsvReader(csvPath);
         csvReader.ReadCsvFile();
 
@@ -143,7 +132,7 @@ public class TextManager : MonoBehaviour
         for (int i = 0; i < csvReader.GetCsvData().Data.Count; i++)
         {
             string infoID = csvReader.GetCsvData().Data[i]["security-related"];
-            this.info.text[(int)eTextType].Add(infoID, csvReader.GetCsvData().Data[i][languageKey]);
+            this.info.text[ConvertTextTypeToIndex(eTextType)].Add(infoID, csvReader.GetCsvData().Data[i][languageKey]);
         }
     }
 
@@ -151,16 +140,26 @@ public class TextManager : MonoBehaviour
     {
         if (eTextType == ETextType.Max)
         {
-            return this.info.text[(int)ETextType.Game][((int)EGameText.Text_Error).ToString()];
+            return this.info.text[ConvertTextTypeToIndex(ETextType.Game)][((int)EGameText.Error).ToString()];
         }
 
-        string text = this.info.text[(int)eTextType][textKey.ToString()];
+        string text = this.info.text[ConvertTextTypeToIndex(eTextType)][textKey.ToString()];
 
         if (text == null)
         {
-            text = this.info.text[(int)ETextType.Game][((int)EGameText.Text_Error).ToString()];
+            text = this.info.text[ConvertTextTypeToIndex(ETextType.Game)][((int)EGameText.Error).ToString()];
         }
 
         return text;
+    }
+
+    private int ConvertTextTypeToIndex(ETextType eTextType)
+    {
+        return (int)eTextType - 1;
+    }
+
+    public static ELanguageType GetDefaultLanguageType()
+    {
+        return kDefaultLanguageType;
     }
 }

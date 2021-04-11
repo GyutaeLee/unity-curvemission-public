@@ -12,7 +12,7 @@ public enum EBoosterLevel
     Max
 }
 
-public class SPRCarAnimationManager : MonoBehaviour, ICMInterface
+public class SPRCarAnimationManager : MonoBehaviour
 {
     public class SPRCarAnimationInformation
     {
@@ -60,13 +60,22 @@ public class SPRCarAnimationManager : MonoBehaviour, ICMInterface
         LateUpdateCarAnimationSprite();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.carObject == null)
-        {
-            this.carObject = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Game"), "SPRCar", true);
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.carObject, GameObject.Find("Game"), "SPRCar", true);
+        CMObjectManager.CheckNullAndFindSpriteRendererInAllChild(ref this._SpriteRenderer, this.carObject, "SPRCarAnimation", true);
+        CMObjectManager.CheckNullAndFindAnimatorInAllChild(ref this._Animator, this.carObject, "SPRCarAnimation", true);
 
+        PrepareBoosterObject();
+
+        if (this.sprCarManager == null)
+        {
+            this.sprCarManager = this.carObject.GetComponent<SPRCarManager>();
+        }
+    }
+
+    private void PrepareBoosterObject()
+    {
         if (this.info.boosterObject == null)
         {
             GameObject boosterObject = CMObjectManager.FindGameObjectInAllChild(this.carObject, "BOOSTER_OBJECT", true);
@@ -85,38 +94,23 @@ public class SPRCarAnimationManager : MonoBehaviour, ICMInterface
                 }
             }
         }
-
-        if (this._SpriteRenderer == null)
-        {
-            this._SpriteRenderer = CMObjectManager.FindGameObjectInAllChild(this.carObject, "SPRCarAnimation", true).GetComponent<SpriteRenderer>();
-        }
-
-        if (this._Animator == null)
-        {
-            this._Animator = CMObjectManager.FindGameObjectInAllChild(this.carObject, "SPRCarAnimation", true).GetComponent<Animator>();
-        }
-
-        this.info.collisionAnimationTerm = 0.2f;
-        this.info.collisionAnimationNumberOfTime = 5;
-
-        if (this.sprCarManager == null)
-        {
-            this.sprCarManager = this.carObject.GetComponent<SPRCarManager>();
-        }
     }
 
     /* Init Function */
 
     private void InitSPRCarAnimationManager()
     {
-        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", 0);
-        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        int carInfoID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultCarInfoID());
+        int carPaintID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultPaintInfoID());
         LoadCarAnimationResource(carInfoID, carPaintID);
 
-        // 시작 차량에 맞게 애니메이션 준비
+        this.info.collisionAnimationTerm = 0.2f;
+        this.info.collisionAnimationNumberOfTime = 5;
+
         SetCaraAnimationStateByCarState((int)sprCarManager.GetCurrentCarState());
     }
 
+    // link : https://www.erikmoberg.net/article/unity3d-replace-sprite-programmatically-in-animation
     private void LoadCarAnimationResource(int carInfoID, int carPaintID)
     {
         string carSpriteSheetName = "security-related" + carInfoID + "/" + carPaintID;
@@ -176,7 +170,6 @@ public class SPRCarAnimationManager : MonoBehaviour, ICMInterface
 
         ECarState eCurrentCarState = this.sprCarManager.GetCurrentCarState();
 
-        // 이전 부스터 애니메이션이 켜져 있는 경우 끄기 위해
         if (isBoosterAnimEnabled == true)
         {
             this.info.boosterObject[this.info.boosterAnimIndex][(int)eCurrentCarState - 1].SetActive(false);         

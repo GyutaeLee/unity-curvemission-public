@@ -3,7 +3,18 @@ using UnityEngine;
 
 public class SPRCsvReader : MonoBehaviour
 {
-    public static SPRCsvReader instance = null;
+    private static SPRCsvReader _instance = null;
+    public static SPRCsvReader instance
+    {
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class SPRCsvCarInformation
     {
@@ -30,7 +41,26 @@ public class SPRCsvReader : MonoBehaviour
     {
         public int stageInfoID;
 
-        public ECarState initialCarState;
+        private ECarState _initialCarState;
+        public ECarState initialCarState
+        {
+            get
+            {
+                return _initialCarState;
+            }
+            set
+            {
+                if (value <= ECarState.None || value >= ECarState.Max)
+                {
+                    _initialCarState = ECarState.Forward;
+                }
+                else
+                {
+                    _initialCarState = value;
+                }
+            }
+        }
+
         public Vector3 initialCarPosition;
         public Vector3 initialCameraPosition;
 
@@ -47,7 +77,6 @@ public class SPRCsvReader : MonoBehaviour
 
     private void Start()
     {
-        InitSPRCsvReader();
         ReadCsvData();
     }
 
@@ -63,11 +92,6 @@ public class SPRCsvReader : MonoBehaviour
         }
     }
 
-    private void InitSPRCsvReader()
-    {
-        
-    }
-
     private void ReadCsvData()
     {
         ReadCsvCarInfo();
@@ -81,8 +105,8 @@ public class SPRCsvReader : MonoBehaviour
 
         this.csvCarInfo = new SPRCsvCarInformation();
 
-        this.csvCarInfo.carInfoID = SecurityPlayerPrefs.GetInt("security-related", 0);
-        this.csvCarInfo.carPaintID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        this.csvCarInfo.carInfoID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultCarInfoID());
+        this.csvCarInfo.carPaintID = SecurityPlayerPrefs.GetInt("security-related", InventoryInformation.GetDefaultPaintInfoID());
 
         this.csvCarInfo.startSpeed = csvReader.GetCsvFloatData(this.csvCarInfo.carInfoID, "security-related");
 
@@ -106,26 +130,18 @@ public class SPRCsvReader : MonoBehaviour
         CMCsvReader csvReader = new CMCsvReader("security-related");
         csvReader.ReadCsvFile();
 
-        List<float> position;
-        int currentStageID = SecurityPlayerPrefs.GetInt("security-related", 0);
+        // 1. initial car setting
+        int currentStageID = SecurityPlayerPrefs.GetInt("security-related", SPRStageManager.GetDefaultStageID());
+        List<float> position = csvReader.GetCsvFloatListData(currentStageID, "security-related");
 
         this.csvStageInfo = new SPRCsvStageInformation();
-
-        // initial car setting
-        position = csvReader.GetCsvFloatListData(currentStageID, "security-related");
-        this.csvStageInfo.initialCarState = (ECarState)csvReader.GetCsvIntData(currentStageID, "security-related");
         this.csvStageInfo.initialCarPosition = new Vector3(position[0], position[1], position[2]);
+        this.csvStageInfo.initialCarState = (ECarState)csvReader.GetCsvIntData(currentStageID, "security-related");
 
-        if (this.csvStageInfo.initialCarState <= ECarState.None ||
-            this.csvStageInfo.initialCarState >= ECarState.Max)
-        {
-            this.csvStageInfo.initialCarState = ECarState.Forward;
-        }
-
-        // camera position
+        // 2. camera position
         position = csvReader.GetCsvFloatListData(currentStageID, "security-related");
 
-        // lap
+        // 3. lap
         this.csvStageInfo.finishLapCount = csvReader.GetCsvIntData(currentStageID, "security-related"); 
     }
 }

@@ -5,6 +5,7 @@ public enum EPurchaseErrorType
     None = 0,
 
     Success = 1,
+    Fail = 2,
     NotEnoughCoin = 2,
     AlreadyOwned = 3,
 
@@ -13,25 +14,22 @@ public enum EPurchaseErrorType
 
 public class ShopManager : MonoBehaviour
 {
-    public static ShopManager instance = null;
-
-    public class ShopInformation
+    private static ShopManager _instance = null;
+    public static ShopManager instance
     {
-
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
     }
-
-    private ShopInformation info;
 
     private void Awake()
     {
         InitInstance();
-
-        this.info = new ShopInformation();
-    }
-
-    private void Start()
-    {
-        InitShopManager();   
     }
 
     private void InitInstance()
@@ -46,18 +44,12 @@ public class ShopManager : MonoBehaviour
         }
     }
 
-    private void InitShopManager()
-    {
-
-    }
-
-    public EPurchaseErrorType PurchaseCarItem(ECarInventoryType eCarInventoryType, int currentMyCarInfoID, ShopCarItemInfo.CarItemInfo carItemInfo)
+    public EPurchaseErrorType PurchaseCarItem(ECarInventoryType eCarInventoryType, int currentMyCarInfoID, ShopItemInfo.CarItemInfo carItemInfo, delegatePurchaseResult delegatePR)
     {
         string textKey = InventoryInformation.GetCarInvetoryTextKey(eCarInventoryType);
         int firstKey = currentMyCarInfoID;
         int secondKey = carItemInfo.carItemInfoID;
 
-        // 차량은 [carItemInfoID]를 기준으로 통일
         if (eCarInventoryType == ECarInventoryType.Car)
         {
             firstKey = secondKey;
@@ -75,11 +67,8 @@ public class ShopManager : MonoBehaviour
             return EPurchaseErrorType.NotEnoughCoin;
         }
 
-        
         // 3. 구매 진행
-        // TO DO : firebase를 믿어야하나? -> 중간에 전송 끊기면 어떻게 할지에 대한 대책 필요
-        ServerManager.instance.PostUserCoinToFirebaseDB(carItemInfo.carItemPrice * -1);
-        ServerManager.instance.PostUserCarInventoryToFirebaseDB(ECarInventoryType.Car, carItemInfo.carItemInfoID, carItemInfo.carItemInfoID, true);
+        ServerManager.instance.PostPurchaseCarItemToFirebaseDB(eCarInventoryType, carItemInfo.carItemPrice * -1, firstKey, secondKey, true, delegatePR);
 
         return EPurchaseErrorType.Success;
     }
@@ -91,16 +80,16 @@ public class ShopManager : MonoBehaviour
         switch (ePurchaseErrorType)
         {
             case EPurchaseErrorType.Success:
-                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Text_PurchaseSuccess);
+                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Shop_0);
                 break;
             case EPurchaseErrorType.AlreadyOwned:
-                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Text_AlreadyPossessed);
+                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Shop_1);
                 break;
             case EPurchaseErrorType.NotEnoughCoin:
-                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Text_NotEnoughCoin);
+                text = TextManager.instance.GetText(ETextType.Shop, (int)EShopText.Shop_2);
                 break;
             default:
-                text = string.Format(TextManager.instance.GetText(ETextType.Game, (int)EGameText.Text_Error), EnumError.GetEGameErrorCode(EGameError.ShopPurchaseError));
+                text = string.Format(TextManager.instance.GetText(ETextType.Game, (int)EGameText.Error), EnumError.GetEGameErrorCodeString(EGameError.ShopPurchaseError));
                 break;
         }
 

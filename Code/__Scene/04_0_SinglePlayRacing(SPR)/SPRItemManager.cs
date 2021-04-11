@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 
-// 현재 아이템 종류
-// 1. 코인
-
 public class SPRItemManager : MonoBehaviour
 {
     public class ItemInformation

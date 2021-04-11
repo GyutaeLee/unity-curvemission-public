@@ -1,45 +1,82 @@
-﻿public enum EGameText
+﻿public enum ELanguageType
 {
-    Text_Error = 0, // 에러가 발생했습니다. (code : %s + )
+    None = 0,
+
+    Eng = 1,        // 영어
+    Kor = 2,        // 한국어
+    Jpa = 3,        // 일본어
+    Chi_Hant = 4,   // 중국어 - 번체
+    Chi_Hans = 5,   // 중국어 - 간체
+
+    Max,
+}
+
+public enum ETextType
+{
+    None = 0,
+
+    Game = 1,
+    Shop = 2,
+    Car = 3,
+    Paint = 4,
+    Parts = 5,
+
+    Max,
+}
+
+public enum EGameText
+{
+    None = 0,
+
+    Error = 1, // 에러가 발생했습니다. (code : %s + )
 
     Max,
 }
 
 public enum EShopText
 {
-    Text_PurchaseSuccess = 0, // 구매에 성공했습니다.
-    Text_AlreadyPossessed = 1, // 이미 보유하고 있는 아이템입니다.
-    Text_NotEnoughCoin = 2, // 보유한 코인이 부족합니다.
+    None = 0,
+
+    Shop_0 = 1, // 구매에 성공했습니다.
+    Shop_1 = 2, // 이미 보유하고 있는 아이템입니다.
+    Shop_2 = 3, // 보유한 코인이 부족합니다.
+    Shop_3 = 4, // {0} 코인으로 구매하시겠습니까?
 
     Max,
 }
 
 public enum ECarText
 {
-    Text_Car_1 = 1001, // CAR1
-    Text_Car_2 = 1002, // CAR2
-    Text_Car_3 = 1003, // CAR3
-    Text_Car_4 = 1004, // CAR4
+    None = 0,
+
+    Car_1 = 1001, // CAR1
+    Car_2 = 1002, // CAR2
+    Car_3 = 1003, // CAR3
+    Car_4 = 1004, // CAR4
 
     Max,
 }
 
 public enum EPaintText
 {
-    Text_Paint_1 = 1001, // 오렌지
-    Text_Paint_2 = 1002, // 파랑
-    Text_Paint_3 = 1003, // 아이보리
-    Text_Paint_4 = 1004, // 빨강
+    None = 0,
+
+    Paint_1 = 1001, // 오렌지
+    Paint_2 = 1002, // 파랑
+    Paint_3 = 1003, // 아이보리
+    Paint_4 = 1004, // 빨강
 
     Max,
 }
 
 public enum EPartsText
 {
-    Text_Parts_1 = 1001, // 흔한 타이어
-    Text_Parts_2 = 1002, // 허름한 엔진
-    Text_Parts_3 = 1003, // 오래된 센서
-    Text_Parts_4 = 1004, // 조잡한 바디킷
+    None = 0,
+
+    Parts_1 = 1001, // 흔한 타이어
+    Parts_2 = 1002, // 허름한 엔진
+    Parts_3 = 1003, // 오래된 센서
+    Parts_4 = 1004, // 조잡한 바디킷
 
     Max,
 }

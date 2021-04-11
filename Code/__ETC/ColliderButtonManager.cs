@@ -8,8 +8,8 @@ public class ColliderButtonManager : MonoBehaviour
     {
         None = 0,
 
-        SCENE_MOVE_NORMAL   = 1,
-        SCENE_MOVE_FADE_OUT = 2,
+        SceneMoveNormal   = 1,
+        SceneMoveFadeOut = 2,
 
         Max,
     }
@@ -39,7 +39,7 @@ public class ColliderButtonManager : MonoBehaviour
 
     private void InitColliderButtonManager()
     {
-        if (this.info.eButtonFunction == EButtonFunction.SCENE_MOVE_FADE_OUT)
+        if (this.info.eButtonFunction == EButtonFunction.SceneMoveFadeOut)
         {
             GameObject manager = GameObject.Find("Manager");
 
@@ -94,11 +94,11 @@ public class ColliderButtonManager : MonoBehaviour
     {
         switch(this.info.eButtonFunction)
         {
-            case EButtonFunction.SCENE_MOVE_NORMAL:
+            case EButtonFunction.SceneMoveNormal:
                 LoadScene(this.info.sceneName);
                 SoundManager.instance.PlaySound(ESoundType.UI, (int)ESoundUI.ClickButton_1);
                 break;
-            case EButtonFunction.SCENE_MOVE_FADE_OUT:
+            case EButtonFunction.SceneMoveFadeOut:
                 LoadSceneWithFadeOut(this.info.sceneName);
                 SoundManager.instance.PlaySound(ESoundType.UI, (int)ESoundUI.ClickButton_1);
                 break;

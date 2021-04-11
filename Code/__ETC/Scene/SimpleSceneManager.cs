@@ -23,8 +23,5 @@ public class SimpleSceneManager : MonoBehaviour
         }
     }
 
-    public void PlayUISound(int soundIndex)
-    {
-        SoundManager.instance.PlaySound(ESoundType.UI, soundIndex);
-    }
+    // TO DO : LoadScene With FadeOut 도 만들어야함
 }

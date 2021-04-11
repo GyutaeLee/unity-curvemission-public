@@ -2,78 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ESPRCollision
-{
-    None = 0,
-
-    Direction   = 1,
-    Wall        = 2,
-    Item        = 3,
-    Booster     = 4,
-    Obstacle    = 5,
-    Lap         = 6,
-
-    Max,
-}
-
-public enum ESPRCollisionDirection
-{
-    None = 0,
-
-    Forward     = 1,
-    Left        = 2,
-    Back        = 3,
-    Right       = 4,
-
-    Max,
-}
-
-public enum ESPRCollisionWall
-{
-    None = 0,
-
-    Normal      = 1,
-
-    Max,
-}
-
-public enum ESPRCollisionItem
-{
-    None = 0,
-
-    Coin        = 1,
-
-    Max,
-}
-
-// EBoosterLevel과 맞추어서 가야함
-public enum ESPRCollisionBooster
-{
-    Booster_1   = 0,    
-    Booster_2   = 1,    
-
-    Max,
-}
-
-public enum ESPRCollisionObstacle
-{
-    Obstacle_1  = 1,   // 바위
-    Obstacle_2  = 2,
-
-    Max,
-}
-
-public enum ESPRCollisionLap
-{
-    None = 0,
-
-    Normal      = 1,
-    Half        = 2,
-    Finish      = 3,
-
-    Max,
-}
-
 public class SPRCollisionManager : MonoBehaviour
 {   
     // Parent : CollisionInformation
@@ -213,10 +141,10 @@ public class SPRCollisionManager : MonoBehaviour
             {
                 case ESPRCollisionItem.Coin:
                     SPRGameManager.instance.AddCoinQuantity(this.quantity);
-                    SPRGameManager.instance.sprUIManager.UpdateUICoin();
+                    SPRGameManager.instance.RefreshUICoin();
 
                     this.isActive = false;
-                    this.collisionObject.GetComponent<Animator>().SetBool("COIN_COLLIDE", true);
+                    this.collisionObject.GetComponent<Animator>().SetBool("security-related", true);
 
                     this.sprCollisionManager.StartCoroutineActiveGameObject(this.collisionObject, false, 0.8f);
                     break;
@@ -359,7 +287,6 @@ public class SPRCollisionManager : MonoBehaviour
 
     public ESPRCollision eSPRCollision;
 
-    // Collision Value
     public int enumValue;
     public List<float> param;
     public List<Sprite> spts;

@@ -4,7 +4,7 @@ using System.Text;
 
 public class SecurityPlayerPrefs
 {
-    /* 
+    /*
      * security-related
      */
 }

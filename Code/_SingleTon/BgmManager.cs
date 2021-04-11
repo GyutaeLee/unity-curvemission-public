@@ -1,59 +1,25 @@
 ﻿using UnityEngine;
 
-public enum EBgmType
+public class BgmManager : MonoBehaviour
 {
-    None = 0,
-
-    Etc         = 1,
-    Village     = 2,
-    RacingStage = 3,
-
-    Max,
-}
-
-public enum EBgmEtc
-{
-    None = 0,
-
-    Intro       = 1,
-
-    Max,
-}
-
-public enum EBgmVillage
-{
-    None = 0,
-
-    Village     = 1,
-    Shop        = 2,
-    Garage      = 3,
-    Ranking     = 4,
-    Tutorial    = 5,
-
-    Max,
-}
-
-public enum EBgmRacingStage
-{
-    None = 0,
-
-    Stage_1     = 1,
-    Stage_2     = 2,
-    Stage_3     = 3,
-    Stage_4     = 4,
-
-    Max,
-}
-
-public class BgmManager : MonoBehaviour, ICMInterface
-{
-    public static BgmManager instance = null;
+    private static BgmManager _instance = null;
+    public static BgmManager instance
+    { 
+        get
+        {
+            return _instance;
+        }
+        set
+        {
+            _instance = value;
+        }
+    }
 
     public class GameBgmInformation
     {
         public bool isBgmChanged;
 
-        public bool isBgmOff;
+        public bool isBgmOn;
         public float bgmVolume;
     }
 
@@ -71,7 +37,6 @@ public class BgmManager : MonoBehaviour, ICMInterface
     private void Start()
     {
         PrepareBaseObjects();
-        InitBgmManager();
     }
 
     private void InitInstance()
@@ -87,7 +52,7 @@ public class BgmManager : MonoBehaviour, ICMInterface
         }
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
         if (this.AS_Bgm == null)
         {
@@ -99,17 +64,12 @@ public class BgmManager : MonoBehaviour, ICMInterface
             this.AS_Bgm = this.GetComponent<AudioSource>();
         }
 
-        this.info.isBgmOff = SecurityPlayerPrefs.GetInt("security-related", 0) == 1 ? true : false;
+        this.info.isBgmOn = SecurityPlayerPrefs.GetBool("security-related", true);
         this.info.bgmVolume = SecurityPlayerPrefs.GetFloat("security-related", 1.0f);
 
         this.AS_Bgm.playOnAwake = false;
         this.AS_Bgm.loop = false;
         this.AS_Bgm.volume = this.info.bgmVolume;
-    }
-
-    private void InitBgmManager()
-    {
-
     }
 
     public void LoadBgmResources(EBgmType eBgmType, int bgmID)
@@ -145,7 +105,7 @@ public class BgmManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        string bgmResourcePathName = string.Format("security-related{0}{1:d}", bgmPathName, bgmIndex);
+        string bgmResourcePathName = string.Format("security-related/{0}{1:d}", bgmPathName, bgmIndex);
 
         this.AC_Bgm = Resources.Load(bgmResourcePathName) as AudioClip;
         this.info.isBgmChanged = true;
@@ -160,7 +120,7 @@ public class BgmManager : MonoBehaviour, ICMInterface
 
     public void PlayGameBgm(bool bLoop)
     {
-        if (this.info.isBgmOff == true)
+        if (this.info.isBgmOn == false)
         {
             return;
         }

@@ -6,11 +6,11 @@
     {
         switch (this.info.eButtonFunction)
         {
-            case EButtonFunction.SCENE_MOVE_NORMAL:
+            case EButtonFunction.SceneMoveNormal:
                 LoadScene(this.info.sceneName);
                 SoundManager.instance.PlaySound(ESoundType.UI, (int)ESoundUI.ClickButton_1);
                 break;
-            case EButtonFunction.SCENE_MOVE_FADE_OUT:
+            case EButtonFunction.SceneMoveFadeOut:
                 LoadSceneWithFadeOut(this.info.sceneName);
                 SoundManager.instance.PlaySound(ESoundType.UI, (int)ESoundUI.ClickButton_1);
                 break;
@@ -18,7 +18,10 @@
                 break;
         }
 
-        SecurityPlayerPrefs.SetInt("security-related", this.stageID);
+        if (this.stageID != 0)
+        {
+            SecurityPlayerPrefs.SetInt("security-related", this.stageID);
+        }
         this.gameObject.SetActive(false);
     }
 }

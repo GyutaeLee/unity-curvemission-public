@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// FORWARD-LEFT-BACK-RIGHT 순서 변경 금지
+// Forward-Left-Back-Right 순서 변경 금지
 // ESPRCollisionDirection과 동일하게 맞추기
 public enum ECarState
 {
@@ -20,7 +20,7 @@ public enum ECarState
     Max,
 }
 
-public class SPRCarManager : MonoBehaviour, ICMInterface
+public class SPRCarManager : MonoBehaviour
 {    
     public class CarInformation
     {
@@ -79,17 +79,12 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         FixedUpdateCarPhysics();
     }
 
-    public void PrepareBaseObjects()
+    private void PrepareBaseObjects()
     {
-        if (this.carObject == null)
-        {
-            this.carObject = CMObjectManager.FindGameObjectInAllChild(GameObject.Find("Game"), "SPRCar", true);
-        }
+        GameObject game = GameObject.Find("Game");
 
-        if (this.carTransform == null)
-        {
-            this.carTransform = this.carObject.GetComponent<Transform>();
-        }
+        CMObjectManager.CheckNullAndFindGameObjectInAllChild(ref this.carObject, game, "SPRCar", true);
+        CMObjectManager.CheckNullAndFindTransformInAllChild(ref this.carTransform, game, "SPRCar", true);
 
         if (this.sprCarAnimationManager == null)
         {
@@ -99,16 +94,19 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
 
     private void InitSPRCarManager()
     {
-        InitCarInformation();
+        this.info.isEnable = true;
+
+        InitCarDataByCsvCarInfo();
+        InitCarDataByCsvStageInfo();
+        InitCarDirectionData();
     }
 
-    private void InitCarInformation()
+    private void InitCarDataByCsvCarInfo()
     {
-        /* Init car info by CsvCarInfo */
         this.info.carInfoID = SPRCsvReader.instance.csvCarInfo.carInfoID;
         this.info.carPaintID = SPRCsvReader.instance.csvCarInfo.carPaintID;
 
-        this.info.currentSpeed = 0;
+        this.info.currentSpeed = 0.0f;
         this.info.startSpeed = SPRCsvReader.instance.csvCarInfo.startSpeed;
 
         this.info.minSpeed = SPRCsvReader.instance.csvCarInfo.minSpeed;
@@ -124,14 +122,18 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         this.info.boosterTime = SPRCsvReader.instance.csvCarInfo.boosterTime;
 
         this.info.obstacleValue = SPRCsvReader.instance.csvCarInfo.obstacleValue;
+    }
 
-        /* Init car info by CsvStageInfo */
+    private void InitCarDataByCsvStageInfo()
+    {
         this.carObject.transform.position = SPRCsvReader.instance.csvStageInfo.initialCarPosition;
 
         this.info.eCurrentCarState = SPRCsvReader.instance.csvStageInfo.initialCarState;
         this.info.eCarNextState = this.info.eCurrentCarState;
+    }
 
-        /* Init Direction Array */
+    private void InitCarDirectionData()
+    {
         this.info.directionVectorStorage = new Vector2[4];
         this.info.directionVectorStorage[0] = (new Vector2((float)Math.Cos(45.0f * Mathf.PI / 180.0f), (float)Math.Sin(45.0f * Mathf.PI / 180.0f))).normalized;
         this.info.directionVectorStorage[1] = (new Vector2((float)Math.Cos(153.5f * Mathf.PI / 180.0f), (float)Math.Sin(153.5f * Mathf.PI / 180.0f))).normalized;
@@ -141,7 +143,6 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         int directionIndex = (int)this.info.eCurrentCarState - 1 > 0 ? (int)this.info.eCurrentCarState - 1 : 0;
         this.info.currentDirectionVector = this.info.directionVectorStorage[directionIndex];
 
-        this.info.isEnable = true;
     }
 
     /* Car Physics */
@@ -174,7 +175,7 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
 
         if (IsCarReadyToTurn() == true)
         {
-            TurnCar(true);
+            TurnCarWithAnimation();
         }
     }
 
@@ -216,29 +217,27 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
     public void ResetCarPosition(Vector3 position)
     {
         this.carTransform.position = position;
-
-        // turn car without animation
-        TurnCar(false);
-
-        // collision animation
-        this.sprCarAnimationManager.PlayCarCollisionAnimation();
-
-        // reset
         this.info.currentSpeed = 0.0f;
 
-        // blink car enable
-        this.info.isEnable = false;
+        TurnCarWithoutAnimation();
+        this.sprCarAnimationManager.PlayCarCollisionAnimation();
 
+        this.info.isEnable = false;
         Invoke("ActiveCar", 0.5f);
     }
 
-    private void ActiveCar()
+    /* Car Turn */
+    private void TurnCarWithAnimation()
     {
-        this.info.isEnable = true;
+        TurnCar(true);
     }
 
-    /* Car Turn */
-    public void TurnCar(bool isNeedAnimation)
+    private void TurnCarWithoutAnimation()
+    {
+        TurnCar(false);
+    }
+
+    private void TurnCar(bool isTurnAnimation)
     {
         if (IsCarMovable() == false)
         {
@@ -246,26 +245,35 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         }
 
         InActiveCarBooster();
+        ChangeCurrentCarStateToNextState();
+        DecelerationByTurn();
+        ChangeCarAnimationByTurn(isTurnAnimation);
 
-        // 준비된 다음 상태를 현재 상태로 변경한다.
-        this.info.currentDirectionVector = this.info.directionVectorStorage[(int)this.info.eCarNextState - 1];
-        this.info.eCurrentCarState = this.info.eCarNextState;
-
-        // 턴 감속
-        this.info.currentSpeed *= this.info.turnDecelerationValue;
-        this.info.isTurnReady = false;
-
-        /* 차량 애니메이션을 변경해준다. */
-        int carState = (int)this.info.eCarNextState;
-
-        // animation이 필요 없을 때에는 animation carstate 값에 100을 더해서 드리프트 모션을 생략한다.
-        carState = (isNeedAnimation == false) ? carState + 100 : carState;
-        this.sprCarAnimationManager.SetCaraAnimationStateByCarState(carState);
-
-        if (isNeedAnimation == true)
+        if (isTurnAnimation == true)
         {
             SoundManager.instance.PlaySound(ESoundType.Car, (int)ESoundCar.Drift_1);
         }
+    }
+
+    private void ChangeCurrentCarStateToNextState()
+    {
+        this.info.currentDirectionVector = this.info.directionVectorStorage[(int)this.info.eCarNextState - 1];
+        this.info.eCurrentCarState = this.info.eCarNextState;
+    }
+
+    private void DecelerationByTurn()
+    {
+        this.info.currentSpeed *= this.info.turnDecelerationValue;
+        this.info.isTurnReady = false;
+    }
+
+    private void ChangeCarAnimationByTurn(bool isTurnAnimation)
+    {
+        const int kSkipTurnAnimationIndexWeight = 100;
+        int carState = (int)this.info.eCarNextState;
+
+        carState = (isTurnAnimation == false) ? (carState + kSkipTurnAnimationIndexWeight) : carState;
+        this.sprCarAnimationManager.SetCaraAnimationStateByCarState(carState);
     }
 
     public void SetReadyTurnCar(ECarState eState)
@@ -308,15 +316,12 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
     public void ObstacleDecelerateCarByValue(float obstacleDecelerationValue)
     {
         this.info.currentSpeed -= obstacleDecelerationValue;
-
-        // clamp car speed
         this.info.currentSpeed = Mathf.Clamp(this.info.currentSpeed, this.info.minSpeed, this.info.maxSpeed);
 
         this.sprCarAnimationManager.PlayCarCollisionAnimation();
     }
 
-    // 부스터에는 maxSpeed를 적용하지 않는다.
-    IEnumerator CoroutineBoostCar(EBoosterLevel eBoosterLevel, float boosterValue, float boosterTime)
+    private IEnumerator CoroutineBoostCar(EBoosterLevel eBoosterLevel, float boosterValue, float boosterTime)
     {
         this.info.currentSpeed += boosterValue;
         this.info.isAcceleration = true;
@@ -334,7 +339,6 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         this.info.accelerationCount--;
         this.info.currentSpeed -= boosterValue * 0.5f;
 
-        // 다른 부스터가 남아 있으면 아직 애니메이션을 유지한다.
         if (this.info.accelerationCount > 0)
         {
             yield break;
@@ -351,7 +355,6 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
             return;
         }
 
-        // 부스터 off (부스터 속도는 그대로 남겨준다)
         this.info.isAcceleration = false;
         this.info.accelerationCount = 0;
         this.sprCarAnimationManager.StopCarBoosterAnimation();
@@ -381,6 +384,11 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
         {
             return false;
         }            
+
+        if (this.info.eCarNextState == this.info.eCurrentCarState)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -423,6 +431,11 @@ public class SPRCarManager : MonoBehaviour, ICMInterface
 
         this.info.isEnable = false;
         this.info.eCurrentCarState = ECarState.Finish;
+    }
+
+    private void ActiveCar()
+    {
+        SetCarEnable(true);
     }
 
     public void SetCarEnable(bool isEnable)
