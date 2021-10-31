@@ -28,6 +28,14 @@ namespace Services.Vehicle
         private VehicleState currentVehicleState;
         private VehicleState nextVehicleState;
 
+        public VehicleState CurrentVehicleState
+        {
+            get
+            {
+                return this.currentVehicleState;
+            }
+        }
+
         private int currentDirectionVectorIndex;
 
         private bool isEnable;
@@ -242,8 +250,7 @@ namespace Services.Vehicle
             if (this.IsEnable == false)
                 return false;
 
-            // TODO : 추후 다른 모드의 게임이 나오게 되면, 각 게임 별 처리가 필요할듯.
-            if (Services.Scene.SingleRacing.GameLogic.Instance.IsGameStatePlaying() == false)
+            if (Static.Game.IsGameStatePlaying() == false)
                 return false;
 
             return true;
@@ -309,10 +316,18 @@ namespace Services.Vehicle
             this.currentVehicleState = VehicleState.Finish;
         }
 
-        // TODO : 카메라에서 가져가면 안 좋을거 같다. 로직 생각 필요
-        public VehicleState GetCurrentVehicleState()
+
+#if (UNITY_INCLUDE_TESTS)
+        public void Test_FastAcceleration(float speed)
         {
-            return this.currentVehicleState;
+            if (speed > 20.0f)
+            {
+                speed = 20.0f;
+            }
+
+            this.currentSpeed = speed;
+            this.maxSpeed = speed;
         }
+#endif
     }
 }

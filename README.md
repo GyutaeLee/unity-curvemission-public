@@ -19,4 +19,6 @@
 - Automate creation of **csv data classes**
 - Csv data **read** system
 - **Unit Test** with Test Runner
+  1. [Fast Version](https://www.youtube.com/watch?v=ft1lQnSj72Y)
+  2. [Slow Version](https://www.youtube.com/watch?v=krco3HKtKTc)
 

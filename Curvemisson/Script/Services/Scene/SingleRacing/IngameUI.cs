@@ -79,8 +79,9 @@ namespace Services.Scene.SingleRacing
         public void StartIntroAction(System.Action StartGame)
         {
 #if (UNITY_EDITOR)
+            Gui.FadeEffect.Instance.InActiveFadeEffectObject();
             StartGame();
-            Destroy(this.gameObject);
+            this.playingCanvas.SetActive(true);
 #else
             const int CountDownSpriteCount = 27;
             const int GoSpriteCount = 12;

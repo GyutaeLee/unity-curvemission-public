@@ -11,7 +11,7 @@ namespace Services.Scene.StageSelection
             User.User.Instance.CurrentStageID = stageID;
 
             delegateLoadScene delegateLoadScene = new delegateLoadScene(Loading.Main.LoadScene);
-            Gui.FadeEffect.Instance.StartCoroutineFadeEffectWithLoadScene(delegateLoadScene, Constants.SceneName.SingleRacing, false);
+            Gui.FadeEffect.Instance.StartCoroutineFadeEffectWithLoadScene(delegateLoadScene, Constants.SceneName.SingleRacingPlay, false);
         }
     }
 }

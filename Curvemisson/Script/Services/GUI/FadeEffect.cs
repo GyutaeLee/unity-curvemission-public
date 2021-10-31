@@ -15,7 +15,7 @@ namespace Services.Gui
         private float beginWaitTerm;
 
         private float fadeDelayTerm;
-        private float fadeAlphaWeight;        
+        private float fadeAlphaWeight;
 
         [SerializeField]
         private Image fadeEffectImage;
@@ -40,6 +40,12 @@ namespace Services.Gui
 
             this.fadeDelayTerm = 0.2f;
             this.fadeAlphaWeight = 0.2f;
+        }
+
+        public void InActiveFadeEffectObject()
+        {
+            this.fadeEffectImage.enabled = false;
+            this.fadeEffectImage.gameObject.SetActive(false);
         }
 
         public void StartCoroutineFadeEffect(bool isFadeIn)
@@ -130,12 +136,6 @@ namespace Services.Gui
             }
 
             this.fadeEffectImage.color = fadeColor;
-
-            if (isFadeIn == true)
-            {
-                this.fadeEffectImage.enabled = false;
-                this.fadeEffectImage.gameObject.SetActive(false);
-            }
 
             delegateLoadScene(sceneName);
         }

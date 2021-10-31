@@ -22,10 +22,10 @@ namespace Services.Scene.SingleRacing
 
             GameObject mapObject = Instantiate(mapPrefab, game.transform);
 
-            this.halfOfFinishLap = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "security-related", true);
-            this.finishLapObject = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "security-related", true);
+            this.halfOfFinishLap = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "HalfOfFinishLap", true);
+            this.finishLapObject = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "FinishLapObject", true);
 
-            GameObject coins = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "security-related", true);            
+            GameObject coins = Useful.ObjectFinder.GetGameObjectInAllChild(mapObject, "Coins", true);            
             for (int i = 0; i < coins.transform.childCount; i++)
             {
                 coins.transform.GetChild(i).GetComponent<Services.Game.Collision.FieldItem>().collideAction = () => { GameLogic.Instance.AcquiredCoinQuantity++; };

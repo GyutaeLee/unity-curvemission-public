@@ -91,7 +91,6 @@ namespace Services.Server
 
             if (webLink == null || webLink == "")
             {
-                Debug.Log("WARNING : NO WEB LINK!");
                 webLink = "http://google.com";
             }
 
@@ -100,12 +99,10 @@ namespace Services.Server
                 if (isConnected == false)
                 {
                     // TODO : 인터넷이 연결되지 않았다는 팝업을 띄움
-                    Debug.Log("ERROR : NO INTERNET CONNECTION");
                     //connectionFailAction();
                 }
                 else
                 {
-                    Debug.Log("SUCCESS : NETWORK CONNECTED");
                     //connectionSuccessAction();                
                 }
 

@@ -9,7 +9,7 @@ using UnityEditor;
 
 public class ClassMaker
 {
-    private string dataClassDirectoryPath = Application.dataPath + "/Curvemission/Script/Util/Csv/Data/Class";
+    private string dataClassDirectoryPath = Application.dataPath + "security-related";
 
     [MenuItem("Csv/Refresh All Csv Class from Csv Files")]
     private static void RefreshAllCsvClass()
@@ -17,7 +17,7 @@ public class ClassMaker
         ClassMaker classMaker = new ClassMaker();
         classMaker.DeletePreviouslyExistingClass();
 
-        const string DataDirectoryPath = "Assets/Resources/Csv/Data";
+        const string DataDirectoryPath = "security-related";
         List<string> dataCsvNames = classMaker.FindCsvNameList(DataDirectoryPath);
         foreach (string dataCsvName in dataCsvNames)
         {
@@ -68,7 +68,7 @@ public class ClassMaker
     private void CreateCsvClass(string csvName)
     {
         csvName = csvName.Replace(".csv", "");
-        string assetCsvPath = "Csv/Data/" + csvName;
+        string assetCsvPath = "security-related";
 
         TextAsset csvData = Resources.Load(assetCsvPath) as TextAsset;
         const string LineSplitChars = @"\r\n|\n\r|\n|\r";

@@ -38,7 +38,7 @@ namespace Services.Scene.Intro
             }
             else
             {
-                Debug.Log("ERROR : POPUPWrongUserNickName is null");
+                Debug.Log("ERROR : POPUP WrongUserNickName is null");
             }
         }
 

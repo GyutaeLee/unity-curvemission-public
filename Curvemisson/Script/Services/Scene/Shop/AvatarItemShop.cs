@@ -424,6 +424,10 @@ namespace Services.Scene.Shop
             }
         }
 
+
+#if (UNITY_INCLUDE_TESTS)
+        public bool IsPurchaseAvatarItemResultFlagSet { get; private set; }
+#endif
         private void PurchaseAllWornAvatarItem()
         {
             delegatePurchaseResult delegatePR = new delegatePurchaseResult(Thread.Waiter.ActiveThreadWaitPurchaseResult);
@@ -438,8 +442,13 @@ namespace Services.Scene.Shop
             }
             else
             {
-                Gui.Popup.Manager.Instance.OpenCheckPopup(Main.Instance.GetPurchaseResultText(purchaseResultType));
+                DoPurchaseFailProcess(purchaseResultType);
             }
+
+#if (UNITY_INCLUDE_TESTS)
+            this.IsPurchaseAvatarItemResultFlagSet = true;
+            Debug.Log("[Test] : " + wornAvatarItemInfoList + " 구매 결과 - [" + purchaseResultType + "]");
+#endif
         }
 
         private List<AvatarItem> GetWornAvatarItemList()
@@ -501,6 +510,11 @@ namespace Services.Scene.Shop
             }
 
             ResetCoinQunatityText();
+        }
+
+        private void DoPurchaseFailProcess(PurchaseResultType purchaseResultType)
+        {
+            Gui.Popup.Manager.Instance.OpenCheckPopup(Main.Instance.GetPurchaseResultText(purchaseResultType));
         }
 
         private void ResetCoinQunatityText()

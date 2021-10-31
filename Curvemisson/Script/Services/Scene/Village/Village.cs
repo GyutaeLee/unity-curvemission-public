@@ -25,7 +25,7 @@ namespace Services.Scene.Village
             CheckAndSetVillagePosition();
         }
 
-        static readonly string[] RightVillageSceneNames = { Services.Constants.SceneName.Ranking, Services.Constants.SceneName.Shop, Services.Constants.SceneName.StageSelection };
+        static readonly string[] RightVillageSceneNames = { Services.Constants.SceneName.RankingStation, Services.Constants.SceneName.Shop, Services.Constants.SceneName.StageSelection };
         private void CheckAndSetVillagePosition()
         {
             for (int i = 0; i < RightVillageSceneNames.Length; i++)

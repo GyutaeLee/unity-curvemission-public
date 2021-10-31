@@ -17,7 +17,7 @@ namespace Services.Security
         static PlayerPrefs()
         {
             // 8 바이트로 하고, 변경해서 쓸것
-            byte[] saltBytes = new byte[] { security - related };
+            byte[] saltBytes = new byte[] { "security-related" };
 
             // 길이 상관 없고, 키를 만들기 위한 용도로 씀
             //string randomSeedForKey = "security-related";

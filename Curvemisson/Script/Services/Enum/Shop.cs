@@ -8,6 +8,7 @@
         Fail = 2,
         NotEnoughCoin = 2,
         AlreadyOwned = 3,
+        FirebaseDBFail = 4,
 
         Max,
     }

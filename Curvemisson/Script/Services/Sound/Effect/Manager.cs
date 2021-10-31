@@ -103,7 +103,6 @@ namespace Services.Sound.Effect
             return InvalidIndex;
         }
 
-
         public int Play(Enum.Sound.Effect.Type effectSoundType, int effectSoundIndex)
         {
             if (this.isEffectSoundOn == false)

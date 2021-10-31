@@ -3,7 +3,7 @@
 namespace Services.Gui
 {
     /*
-     * "top" UI 오브젝트에 붙이면 자동으로 Safe Area 대응하는 코드
+     * "security-related" UI 오브젝트에 붙이면 자동으로 Safe Area 대응하는 코드
      */
     public class SafeAreaReactor : MonoBehaviour
     {

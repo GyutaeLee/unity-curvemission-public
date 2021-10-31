@@ -489,10 +489,9 @@ namespace Services.Scene.Shop
             return this.shopCarItemButtons[(int)carItemType - 1][index];
         }
 
-        /*
-         * purchase code
-         */
-
+#if (UNITY_INCLUDE_TESTS)
+        public bool IsPurchaseCarItemResultFlagSet { get; private set; }
+#endif
         private void PurchaseSelectedCarItem()
         {
             delegatePurchaseResult delegatePR = new delegatePurchaseResult(Thread.Waiter.ActiveThreadWaitPurchaseResult);
@@ -508,8 +507,13 @@ namespace Services.Scene.Shop
             }
             else
             {
-                Gui.Popup.Manager.Instance.OpenCheckPopup(Main.Instance.GetPurchaseResultText(purchaseResultType));
+                DoPurchaseFailProcess(purchaseResultType);
             }
+
+#if (UNITY_INCLUDE_TESTS)
+            this.IsPurchaseCarItemResultFlagSet = true;
+            Debug.Log("[Test] : " + this.currentCarItemType + " " + carInfoID + " 구매 결과 - [" + purchaseResultType + "]");
+#endif
         }
 
         private IEnumerator CoroutineWaitingPurchaseCarItemResult()
@@ -538,6 +542,15 @@ namespace Services.Scene.Shop
 
             selectedshopCarItemButton.SetOwned(true);
             RefreshUserCoinQunatityText();
+
+            CloseSelectedCarItemUI();
+            OpenShopCarItemButton();
+            ChangeShopCarItemButton(this.currentCarItemType);
+        }
+
+        private void DoPurchaseFailProcess(PurchaseResultType purchaseResultType)
+        {
+            Gui.Popup.Manager.Instance.OpenCheckPopup(Main.Instance.GetPurchaseResultText(purchaseResultType));
 
             CloseSelectedCarItemUI();
             OpenShopCarItemButton();

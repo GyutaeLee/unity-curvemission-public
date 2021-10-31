@@ -78,15 +78,14 @@ namespace Services.Vehicle
         }
 
         public void UpdateAnimationSpeed(float animationSpeed)
-        {
-            // TODO : 추후 다른 모드의 게임이 나오게 되면, 각 게임 별 처리가 필요할듯.
-            if (Services.Scene.SingleRacing.GameLogic.Instance.IsGameStatePlaying() == false)
+        {   
+            if (Static.Game.IsGameStatePlaying() == false)
             {
                 this.animator.speed = 0;
                 return;
             }
 
-            if (this.animator.GetCurrentAnimatorStateInfo(0).IsTag("Idle") == true)
+            if (this.animator.GetCurrentAnimatorStateInfo(0).IsTag("Move") == true)
             {
                 // TODO : 0 ~ 3 사이가 애니메이션 속도가 적당하다?
                 this.animator.speed = animationSpeed;

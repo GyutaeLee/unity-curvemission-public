@@ -10,13 +10,13 @@ using Newtonsoft.Json;
 using Firebase.Database;
 
 namespace Services.Scene.RankingStation
-{    
+{
     public class RankingData
     {
-        public Dictionary<string, int> Avatar { get; set; } 
-        public Dictionary<string, float> Record { get; set; }
+        public Dictionary<string, int> Avatar { get; set; }     
+        public Dictionary<string, float> Record { get; set; }   
 
-        public string Nickname { get; set; }                 
+        public string Nickname { get; set; }                    
         public string UserId { get; set; }
     }
 
@@ -25,7 +25,7 @@ namespace Services.Scene.RankingStation
         [SerializeField]
         private GameObject singleRacingRankingStationObject;
 
-        private Dictionary<int, List<RankingData>> singleRacingRankingInformationDictionary;        
+        private Dictionary<int, List<RankingData>> singleRacingRankingInformationDictionary;
         private DataSnapshot dataSnapshot = null;
 
         private void Start()
@@ -68,6 +68,9 @@ namespace Services.Scene.RankingStation
             SceneManager.LoadScene(User.User.Instance.BeforeSceneName);
         }
 
+#if (UNITY_INCLUDE_TESTS)
+        public bool IsSingleRacingRankingInformationSet { get; private set; }
+#endif
         private void InitializeSingleRacingRankingInformationDictionary()
         {
             this.singleRacingRankingInformationDictionary = new Dictionary<int, List<RankingData>>();
@@ -83,6 +86,9 @@ namespace Services.Scene.RankingStation
                     return r1.Record["security-related"].CompareTo(r2.Record["security-related"]);
                 });
             }
+#if (UNITY_INCLUDE_TESTS)
+            IsSingleRacingRankingInformationSet = true;
+#endif
         }
 
         private List<RankingData> GetSingleRacingRankingInformationList(DataSnapshot stage)

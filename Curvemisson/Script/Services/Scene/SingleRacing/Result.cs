@@ -9,7 +9,8 @@ namespace Services.Scene.SingleRacing
 {
     public class Result : MonoBehaviour
     {
-        private bool isBestRecord;
+        public bool IsBestRecord { get; private set; }
+        public bool IsEffectFinished { get; private set; }
 
         private int stageID;
         private int userRanking;
@@ -31,7 +32,7 @@ namespace Services.Scene.SingleRacing
 
         public void Set(bool isBestRecord, int stageID, int userRanking, int acquiredCoinQuantity, float lapTime)
         {
-            this.isBestRecord = isBestRecord;
+            this.IsBestRecord = isBestRecord;
 
             this.stageID = stageID;
             this.userRanking = userRanking;
@@ -76,24 +77,14 @@ namespace Services.Scene.SingleRacing
 
         private void PrepareFinishObject()
         {
-            string finishObject;
+            string finishObjectName = (this.IsBestRecord == true) ? "FinishBest" : "FinishNormal";
 
-            if (this.isBestRecord == true)
-            {
-                finishObject = "FinishBest";
-            }
-            else
-            {
-                finishObject = "FinishNormal";
-            }
-
-            Useful.ObjectFinder.FindGameObjectInAllChild(ref this.finishObject, GameObject.Find("Canvas"), finishObject, true);
+            Useful.ObjectFinder.FindGameObjectInAllChild(ref this.finishObject, GameObject.Find("Canvas"), finishObjectName, true);
             this.finishObject.SetActive(true);
         }
 
         private void PrepareRankEffectObject()
         {
-
             this.rankEffectObjects = new List<GameObject>();
 
             GameObject rankEffectObject = Useful.ObjectFinder.GetGameObjectInAllChild(this.finishObject, "RankEffectObject", true);
@@ -212,6 +203,8 @@ namespace Services.Scene.SingleRacing
 
             yield return StartCoroutine(CoroutineRecordTextEffect());
             yield return StartCoroutine(CoroutineChangeRankEffectObject());
+
+            this.IsEffectFinished = true;
         }
 
         private IEnumerator CoroutineRecordTextEffect()

@@ -74,7 +74,7 @@ namespace Services.Scene.SingleRacing
         public void RetrytGame()
         {
             Time.timeScale = 1.0f;
-            Scene.Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacing);
+            Scene.Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacingPlay);
         }
 
         public void PauseGame()
@@ -147,15 +147,18 @@ namespace Services.Scene.SingleRacing
 
         private IEnumerator CoroutineWaitingToGoResultScene(bool isBestRecord)
         {
-            Delegate.delegateGetFlag delegateGetFlag = new Delegate.delegateGetFlag(Thread.Waiter.GetThreadWaitIsCompleted);
-            yield return StartCoroutine(Thread.Waiter.CoroutineThreadWait(delegateGetFlag));
-
-            if (Thread.Waiter.GetThreadWaitIsCompleted() == false)
+            if (isBestRecord == true)
             {
-                string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ThreadWaitTimeOver);
-                Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
-                Loading.Main.LoadScene(User.User.Instance.BeforeSceneName);
-                yield break;
+                Delegate.delegateGetFlag delegateGetFlag = new Delegate.delegateGetFlag(Thread.Waiter.GetThreadWaitIsCompleted);
+                yield return StartCoroutine(Thread.Waiter.CoroutineThreadWait(delegateGetFlag));
+
+                if (Thread.Waiter.GetThreadWaitIsCompleted() == false)
+                {
+                    string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ThreadWaitTimeOver);
+                    Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
+                    Gui.Popup.Manager.Instance.AddCheckPopupOkButtonListener(() => { Loading.Main.LoadScene(User.User.Instance.BeforeSceneName); });
+                    yield break;
+                }
             }
 
             InstantiateAndSetResult(isBestRecord);
@@ -164,8 +167,7 @@ namespace Services.Scene.SingleRacing
 
         private void InstantiateAndSetResult(bool isBestRecord)
         {
-            GameObject singleRacingResultPrefab = Resources.Load<GameObject>("Prefab/Etc/SingleRacingResult");
-            GameObject singleRacingResultObject = Instantiate(singleRacingResultPrefab);
+            GameObject singleRacingResultObject = new GameObject("SingleRacingResult");
             DontDestroyOnLoad(singleRacingResultObject);
 
             Result result = singleRacingResultObject.AddComponent<Result>();
@@ -178,7 +180,7 @@ namespace Services.Scene.SingleRacing
 
         private void FadeOutAndLoadResultScene()
         {
-            Delegate.delegateLoadScene delegateLoadScene = new Delegate.delegateLoadScene(Loading.Main.LoadScene);
+            Delegate.delegateLoadScene delegateLoadScene = new Delegate.delegateLoadScene(UnityEngine.SceneManagement.SceneManager.LoadScene);
             Gui.FadeEffect.Instance.StartCoroutineFadeEffectWithLoadScene(delegateLoadScene, Constants.SceneName.SingleRacingResult, false);
         }
 

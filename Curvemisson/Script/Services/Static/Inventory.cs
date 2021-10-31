@@ -58,13 +58,13 @@ namespace Services.Static
             switch (carInventoryType)
             {
                 case CarInventoryType.Car:
-                    textKey = "security-related";
+                    textKey = "cars";
                     break;
                 case CarInventoryType.Paint:
-                    textKey = "security-related";
+                    textKey = "paints";
                     break;
                 case CarInventoryType.Parts:
-                    textKey = "security-related";
+                    textKey = "parts";
                     break;
                 default:
                     textKey = "";
@@ -107,13 +107,13 @@ namespace Services.Static
             switch (avatarInventoryType)
             {
                 case AvatarInventoryType.Head:
-                    textKey = "security-related";
+                    textKey = "heads";
                     break;
                 case AvatarInventoryType.Top:
-                    textKey = "security-related";
+                    textKey = "tops";
                     break;
                 case AvatarInventoryType.Bottom:
-                    textKey = "security-related";
+                    textKey = "bottoms";
                     break;
                 default:
                     textKey = "";

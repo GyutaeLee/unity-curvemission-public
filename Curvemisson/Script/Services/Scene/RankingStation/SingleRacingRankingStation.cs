@@ -38,7 +38,7 @@ namespace Services.Scene.RankingStation
 
             public Image BestLapCarImage;
 
-            public Button OpenRecordCardButton;
+            public Button RecordCardButton;
 
             public UnityEngine.UI.Text RankingNumberText;
             public UnityEngine.UI.Text BestLapTimeText;
@@ -81,7 +81,7 @@ namespace Services.Scene.RankingStation
         private GameObject topRankingObject;
         private GameObject elseRankingObject;
 
-        private Button openMapComboxBoxButton;
+        private Button mapComboxBoxButton;
         private Button closeMapComboBoxButton;
         private Button upMapComboBoxButton;
         private Button downMapComboBoxButton;
@@ -89,8 +89,8 @@ namespace Services.Scene.RankingStation
         private Button upElseRankingButton;
         private Button downElseRankingButton;
 
-        private Button openUserRecordCardButton;
-        private Button openTotalRankingButton;
+        private Button userRecordCardButton;
+        private Button totalRankingButton;
 
         private Button backButton;
             
@@ -116,7 +116,7 @@ namespace Services.Scene.RankingStation
         {
             GameObject canvas = GameObject.Find("Canvas");
 
-            this.singlePlayRankingStationCanvas = Resources.Load<GameObject>("Prefab/UI/Canvas/SinglePlayRankingStationCanvas");
+            this.singlePlayRankingStationCanvas = Resources.Load<GameObject>("Prefab/UI/Canvas/SingleRacingRankingStationCanvas");
             this.singlePlayRankingStationCanvas = Instantiate(this.singlePlayRankingStationCanvas, canvas.transform);
             this.singlePlayRankingStationCanvas.SetActive(true);
         }
@@ -168,8 +168,8 @@ namespace Services.Scene.RankingStation
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.NicknameText, rankerRecordLineObject, "NicknameText", true);
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.BestLapTimeText, rankerRecordLineObject, "BestLapTimeText", true);
 
-                ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.OpenRecordCardButton, rankerRecordLineObject, "OpenRecordCardButton", true);
-                AddOpenDriverRankingUIListener(rankerRecordLine.OpenRecordCardButton, i);
+                ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RecordCardButton, rankerRecordLineObject, "RecordCardButton", true);
+                AddOpenDriverRankingUIListener(rankerRecordLine.RecordCardButton, i);
 
                 this.topRankerRecordLines[i] = rankerRecordLine;
             }
@@ -189,8 +189,8 @@ namespace Services.Scene.RankingStation
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.BestLapTimeText, rankerRecordLineObject, "BestLapTimeText", true);
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RankingNumberText, rankerRecordLineObject, "RankingNumberText", true);
 
-                ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.OpenRecordCardButton, rankerRecordLineObject, "OpenRecordCardButton", true);
-                AddOpenDriverRankingUIListener(rankerRecordLine.OpenRecordCardButton, i + Constants.ElseRankingFirstIndex);
+                ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RecordCardButton, rankerRecordLineObject, "RecordCardButton", true);
+                AddOpenDriverRankingUIListener(rankerRecordLine.RecordCardButton, i + Constants.ElseRankingFirstIndex);
 
                 this.elseRankerRecordLines[i] = rankerRecordLine;
             }
@@ -250,8 +250,8 @@ namespace Services.Scene.RankingStation
 
         private void PrepareButtons()
         {
-            ObjectFinder.FindComponentInAllChild(ref this.openMapComboxBoxButton, this.mapComboBoxObject, "OpenMapComboxBoxButton", true);
-            this.openMapComboxBoxButton.onClick.AddListener(() => { ClickMapComboBoxButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+            ObjectFinder.FindComponentInAllChild(ref this.mapComboxBoxButton, this.mapComboBoxObject, "MapComboxBoxButton", true);
+            this.mapComboxBoxButton.onClick.AddListener(() => { ClickMapComboBoxButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
 
             ObjectFinder.FindComponentInAllChild(ref this.closeMapComboBoxButton, this.mapComboBoxObject, "CloseMapComboBoxButton", true);
             ObjectFinder.FindComponentInAllChild(ref this.upMapComboBoxButton, this.mapComboBoxObject, "UpMapComboBoxButton", true);
@@ -265,10 +265,10 @@ namespace Services.Scene.RankingStation
             this.upElseRankingButton.onClick.AddListener(() => { ClickUpElseRankingButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
             this.downElseRankingButton.onClick.AddListener(() => { ClickDownElseRankingButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
 
-            ObjectFinder.FindComponentInAllChild(ref this.openUserRecordCardButton, this.singlePlayRankingStationCanvas, "OpenUserRecordCardButton", true);
-            ObjectFinder.FindComponentInAllChild(ref this.openTotalRankingButton, this.singlePlayRankingStationCanvas, "OpenTotalRankingButton", true);
-            this.openUserRecordCardButton.onClick.AddListener(() => { OpenUserRecordCard(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
-            this.openTotalRankingButton.onClick.AddListener(() => { OpenTotalRanking(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+            ObjectFinder.FindComponentInAllChild(ref this.userRecordCardButton, this.singlePlayRankingStationCanvas, "UserRecordCardButton", true);
+            ObjectFinder.FindComponentInAllChild(ref this.totalRankingButton, this.singlePlayRankingStationCanvas, "TotalRankingButton", true);
+            this.userRecordCardButton.onClick.AddListener(() => { OpenUserRecordCard(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+            this.totalRankingButton.onClick.AddListener(() => { OpenTotalRanking(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
 
             ObjectFinder.FindComponentInAllChild(ref this.backButton, this.singlePlayRankingStationCanvas, "BackButton", true);
             this.backButton.onClick.AddListener(() => { ClickBackButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });

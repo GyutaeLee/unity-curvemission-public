@@ -251,8 +251,6 @@ namespace Services.Scene.Garage
                 default:
                     break;
             }
-
-            
         }
 
         private void AddClosetAvatarItemButtonListener(ClosetAvatarItemButton closetAvatarItemButton, int itemPositionIndex)
@@ -263,82 +261,77 @@ namespace Services.Scene.Garage
         // TODO : UI를 닫을 때 한번에 서버에 보내도록 수정
         private void ChangeMyAvatarItem(AvatarItem avatarItem, int itemPositionIndex)
         {
-            this.selectedClosetAvatarItemIndex[(int)avatarItem.Type] = itemPositionIndex;
+            bool isChanged = false;
 
             switch (avatarItem.Type)
             {
                 case AvatarItemType.Head:
-                    ChangeMyAvatarItemHead(avatarItem.InfoID, itemPositionIndex);
+                    isChanged = ChangeMyAvatarItemHead(avatarItem.InfoID, itemPositionIndex);
                     break;
                 case AvatarItemType.Top:
-                    ChangeMyAvatarItemTop(avatarItem.InfoID, itemPositionIndex);
+                    isChanged = ChangeMyAvatarItemTop(avatarItem.InfoID, itemPositionIndex);
                     break;
                 case AvatarItemType.Bottom:
-                    ChangeMyAvatarItemBottom(avatarItem.InfoID, itemPositionIndex);
+                    isChanged = ChangeMyAvatarItemBottom(avatarItem.InfoID, itemPositionIndex);
                     break;
                 default:
+                    isChanged = false;
                     break;
             }
+
+            if (isChanged == false)
+                return;
+
+            ChangeClosetAvatarItemSelectedBoxPosition(itemPositionIndex);
+            this.selectedClosetAvatarItemIndex[(int)avatarItem.Type] = itemPositionIndex;
         }
 
-        private void ChangeMyAvatarItemHead(int headInfoID, int itemIndex)
+        private bool ChangeMyAvatarItemHead(int headInfoID, int itemIndex)
         {
             string textKey = Static.AvatarInventory.GetAvatarInventoryTypeTextKey(AvatarInventoryType.Head);
 
             if (User.User.Instance.IsOwnedAvatarItemInAvatarInventory(textKey, headInfoID) == false)
-            {
-                return;
-            }
+                return false;
 
             if (this.myAvatarUI.GetHeadInfoID() == headInfoID)
-            {
-                return;
-            }
+                return false;
 
             User.User.Instance.ChangeEquippedAvatarItemHeadInfoID(headInfoID);
             this.myAvatarUI.ChangeHead(User.User.Instance.CurrentAvatar.Head.InfoID);
 
-            ChangeClosetAvatarItemSelectedBoxPosition(itemIndex);
+            return true;
         }
 
-        private void ChangeMyAvatarItemTop(int topInfoID, int itemIndex)
+        private bool ChangeMyAvatarItemTop(int topInfoID, int itemIndex)
         {
             string textKey = Static.AvatarInventory.GetAvatarInventoryTypeTextKey(AvatarInventoryType.Top);
 
             if (User.User.Instance.IsOwnedAvatarItemInAvatarInventory(textKey, topInfoID) == false)
-            {
-                return;
-            }
+                return false; 
 
             if (this.myAvatarUI.GetTopInfoID() == topInfoID)
-            {
-                return;
-            }
+                return false;
 
             User.User.Instance.ChangeEquippedAvatarItemTopInfoID(topInfoID);
             this.myAvatarUI.ChangeTop(User.User.Instance.CurrentAvatar.Top.InfoID);
 
-            ChangeClosetAvatarItemSelectedBoxPosition(itemIndex);
+            return true;
         }
 
-        private void ChangeMyAvatarItemBottom(int bottomInfoID, int itemIndex)
+        private bool ChangeMyAvatarItemBottom(int bottomInfoID, int itemIndex)
         {
             string textKey = Static.AvatarInventory.GetAvatarInventoryTypeTextKey(AvatarInventoryType.Bottom);
 
             if (User.User.Instance.IsOwnedAvatarItemInAvatarInventory(textKey, bottomInfoID) == false)
-            {
-                return;
-            }
+                return false;
 
             if (this.myAvatarUI.GetBottomInfoID() == bottomInfoID)
-            {
-                return;
-            }
+                return false;
 
             User.User.Instance.ChangeEquippedAvatarItemBottomInfoID(bottomInfoID);
             this.myAvatarUI.ChangeBottom(User.User.Instance.CurrentAvatar.Bottom.InfoID);
 
-            ChangeClosetAvatarItemSelectedBoxPosition(itemIndex);
+            return true;
         }
 
         private void CheckAndSetClosetAvatarItemSelectedItemIndex(ClosetAvatarItemButton closetAvatarItemButton, int itemPositionIndex)

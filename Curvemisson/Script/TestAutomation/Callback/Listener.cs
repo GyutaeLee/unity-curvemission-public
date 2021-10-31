@@ -3,7 +3,7 @@
 using UnityEngine;
 using UnityEditor.TestTools.TestRunner.Api;
 
-namespace UnitTest.Callback
+namespace TestAutomation.Callback
 {
     public class Listener : ICallbacks
     {

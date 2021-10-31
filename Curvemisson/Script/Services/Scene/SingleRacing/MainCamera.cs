@@ -35,7 +35,7 @@ namespace Services.Scene.SingleRacing
             }
 
             float xPositionWeight = 0.0f, yPositionWeight = 0.0f;
-            switch (controller.GetCurrentVehicleState())
+            switch (controller.CurrentVehicleState)
             {
                 case VehicleState.Forward:
                     xPositionWeight = 0.75f;

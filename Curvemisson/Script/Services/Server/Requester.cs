@@ -41,7 +41,7 @@ namespace Services.Server
 
         public static void RequestSingleRacingRankingFromFirebaseDB(System.Action<DataSnapshot> action)
         {
-            string baseKey = "security-related";
+            string baseKey = "cvmission_ranking/single_racing";
             string progressCircleKey = "RequestSingleRacingRankingFromFirebaseDB";
             string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
 

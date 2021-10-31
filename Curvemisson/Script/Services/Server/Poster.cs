@@ -71,7 +71,7 @@ namespace Services.Server
                 if (task.IsFaulted)
                 {
                     Debug.Log("ERROR : DB not found");
-                    delegatePR(PurchaseResultType.Fail);
+                    delegatePR(PurchaseResultType.FirebaseDBFail);
                 }
                 else if (task.IsCompleted)
                 {
@@ -86,7 +86,7 @@ namespace Services.Server
 
                         if (User.User.Instance.GetUserCoin_1() < addCoinQuantity)
                         {
-                            delegatePR(PurchaseResultType.Fail);
+                            delegatePR(PurchaseResultType.NotEnoughCoin);
                             return;
                         }
                     }
@@ -132,7 +132,7 @@ namespace Services.Server
                 if (task.IsFaulted)
                 {
                     Debug.Log("ERROR : DB not found");
-                    delegatePR(PurchaseResultType.Fail);
+                    delegatePR(PurchaseResultType.FirebaseDBFail);
                 }
                 else if (task.IsCompleted)
                 {
@@ -154,7 +154,7 @@ namespace Services.Server
 
                         if (User.User.Instance.IsUserHaveEnoughCoin_1(avatarItemPriceSum) == false)
                         {
-                            delegatePR(PurchaseResultType.Fail);
+                            delegatePR(PurchaseResultType.NotEnoughCoin);
                             return;
                         }
                     }
@@ -180,7 +180,7 @@ namespace Services.Server
             {
                 AvatarInventoryType avatarInventoryType = Static.AvatarItem.ConvertAvatarItemTypeToAvatarInventoryType(avatarItemInfoList[i].Type);
                 string avatarInventoryTextKey = Static.AvatarInventory.GetAvatarInventoryTypeTextKey(avatarInventoryType);
-                string childKey = "security-related/" + avatarInventoryTextKey + "/" + avatarItemInfoList[i].InfoID;
+                string childKey = "security-related" + avatarInventoryTextKey + "/" + avatarItemInfoList[i].InfoID;
 
                 childUpdates[baseKey + "/" + childKey] = true;
             }
@@ -219,11 +219,11 @@ namespace Services.Server
                 }
                 else if (task.IsCompleted)
                 {
-                    string childKey = "security-related/" + stageID;
+                    string childKey = "security-related" + stageID;
                     DataSnapshot snapshot = task.Result;
                     string jsonData;
 
-                    jsonData = snapshot.Child("security-related/" + stageID).GetRawJsonValue();
+                    jsonData = snapshot.Child("security-related" + stageID).GetRawJsonValue();
                     bool isStageOpen = JsonConvert.DeserializeObject<bool>(jsonData);
 
                     if (isStageOpen == false)
@@ -231,7 +231,7 @@ namespace Services.Server
                         return;
                     }
 
-                    jsonData = snapshot.Child(childKey + "/security-related").GetRawJsonValue();
+                    jsonData = snapshot.Child(childKey + "security-related").GetRawJsonValue();
                     float bestRecordTime = JsonConvert.DeserializeObject<float>(jsonData);
 
 
@@ -247,20 +247,20 @@ namespace Services.Server
         {
             Dictionary<string, System.Object> childUpdates = new Dictionary<string, System.Object>();
 
-            childUpdates[baseKey + "/" + "/security-related"] = User.User.Instance.CurrentAvatar.Head.InfoID;
-            childUpdates[baseKey + "/" + "/security-related"] = User.User.Instance.CurrentAvatar.Top.InfoID;
-            childUpdates[baseKey + "/" + "/security-related"] = User.User.Instance.CurrentAvatar.Bottom.InfoID;
+            childUpdates[baseKey + "/" + "security-related"] = User.User.Instance.CurrentAvatar.Head.InfoID;
+            childUpdates[baseKey + "/" + "security-related"] = User.User.Instance.CurrentAvatar.Top.InfoID;
+            childUpdates[baseKey + "/" + "security-related"] = User.User.Instance.CurrentAvatar.Bottom.InfoID;
 
-            childUpdates[baseKey + "/" + childKey + "/security-related"] = newRecordTime;
-            childUpdates[baseKey + "/" + childKey + "/security-related"] = newRecordCar;
-            childUpdates[baseKey + "/" + childKey + "/security-related"] = newRecordPaint;
+            childUpdates[baseKey + "/" + childKey + "security-related"] = newRecordTime;
+            childUpdates[baseKey + "/" + childKey + "security-related"] = newRecordCar;
+            childUpdates[baseKey + "/" + childKey + "security-related"] = newRecordPaint;
 
             Manager.Instance.DatabaseReference.UpdateChildrenAsync(childUpdates);
         }
 
         public static void CheckAndPostUserSingleRacingRankingToFirebaseDB(int stageID, delegateActiveFlag delegateActiveFlag)
         {
-            string baseKey = "security-related" + stageID;
+            string baseKey = "cvmission_ranking/single_racing/" + stageID;
             string progressCircleKey = "CheckAndPostUserSingleRacingRankingToFirebaseDB";
             string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
 
@@ -468,7 +468,7 @@ namespace Services.Server
         {
             string baseKey = Manager.Instance.GetFirebaseDBUserBaseKey();
             string inventoryKey = Static.Inventory.ConvertInventoryTypeToTextKey(inventoryType);
-            string childKey = "security-related/" + inventoryKey + "/" + equipmentTextKey;
+            string childKey = "security-related" + inventoryKey + "/" + equipmentTextKey;
 
             Manager.Instance.DatabaseReference.Child(baseKey + "/" + childKey).SetValueAsync(equipmentInfoID);
         }
@@ -489,7 +489,7 @@ namespace Services.Server
             jsonData.Add("security-related", User.User.Instance.IsBanUser());
             jsonData.Add("security-related", User.User.Instance.IsTestUser());
 
-            Manager.Instance.DatabaseReference.Child("security-related" + Manager.Instance.FirebaseUser.UserId + "/security-related").SetRawJsonValueAsync(jsonData.ToString());
+            Manager.Instance.DatabaseReference.Child("security-related" + Manager.Instance.FirebaseUser.UserId + "security-related").SetRawJsonValueAsync(jsonData.ToString());
         }
     }
 }

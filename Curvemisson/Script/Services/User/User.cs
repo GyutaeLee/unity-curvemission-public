@@ -21,7 +21,7 @@ namespace Services.User
             public string Nickname;                                             
             public string StartDate;                                            
             public bool IsBanUser;                                              
-            public bool IsTestUser;                                            
+            public bool IsTestUser;                                             
 
             public Dictionary<string, int> EquipmentAvatar;                     
             public Dictionary<string, System.Object> EquipmentCar;              
@@ -31,10 +31,10 @@ namespace Services.User
 
             public Dictionary<string, Dictionary<int, bool>> AvatarInventory;   
 
-            public Dictionary<string, Dictionary<int, Dictionary<int, bool>>> CarInventory;     
+            public Dictionary<string, Dictionary<int, Dictionary<int, bool>>> CarInventory;      
 
-            public Dictionary<int, bool> OwnedStages;                                     
-            public Dictionary<int, Dictionary<string, float>> SingleRacingRecords;
+            public Dictionary<int, bool> OwnedStages;                                      
+            public Dictionary<int, Dictionary<string, float>> SingleRacingRecords;        
         }
 
         public string BeforeSceneName { get; private set; }
