@@ -34,6 +34,6 @@
   1. [Fast Version Video](https://www.youtube.com/watch?v=ft1lQnSj72Y)
   2. [Slow Version Video](https://www.youtube.com/watch?v=krco3HKtKTc)
 
-- **Replay System** with Firebase Storage
+- **Replay** System
   1. [Video](https://youtu.be/c6bCsLMQHNc)
 
