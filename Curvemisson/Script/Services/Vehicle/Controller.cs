@@ -23,7 +23,7 @@ namespace Services.Vehicle
         public const int SkipTurnAnimationIndexWeight = 100;
 
         [SerializeField]
-        private Transform carTransform;
+        private Transform carTransform;        
 
         private VehicleState currentVehicleState;
         private VehicleState nextVehicleState;
@@ -51,6 +51,7 @@ namespace Services.Vehicle
             }
         }
 
+        public bool IsCurveAnimationInCurrentFrame { get; private set; }
         private bool isReadyToCurve;
         private bool isBoosterOn;
         private int nestedBoosterCount;
@@ -77,6 +78,11 @@ namespace Services.Vehicle
         private void Start()
         {
             InitializeController();
+        }
+
+        private void LateUpdate()
+        {
+            this.IsCurveAnimationInCurrentFrame = false;
         }
 
         private void InitializeController()
@@ -170,7 +176,7 @@ namespace Services.Vehicle
             }
         }
 
-        private bool CanCurve()
+        public bool CanCurve()
         {
             if (IsMovable() == false)
                 return false;
@@ -209,6 +215,7 @@ namespace Services.Vehicle
 
         private void PlayCurveAnimation()
         {
+            this.IsCurveAnimationInCurrentFrame = true;
             this.animation.SetAnimationState(this.nextVehicleState);
         }
 
@@ -220,9 +227,12 @@ namespace Services.Vehicle
 
         public void ResetPosition(Vector3 position)
         {
-            this.carTransform.position = position;
-            this.currentSpeed = 0.0f;
+            if (Static.Replay.IsReplayMode == false)
+            { 
+                this.carTransform.position = position;
+            }
 
+            this.currentSpeed = 0.0f;
             Curve(false);
             this.animation.PlayCollisionAnimation();
 
@@ -250,7 +260,7 @@ namespace Services.Vehicle
             if (this.IsEnable == false)
                 return false;
 
-            if (Static.Game.IsGameStatePlaying() == false)
+            if (Static.Game.IsGameProceeding() == false)
                 return false;
 
             return true;

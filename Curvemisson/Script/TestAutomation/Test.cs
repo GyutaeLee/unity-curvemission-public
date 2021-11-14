@@ -79,7 +79,7 @@ namespace TestAutomation
             yield return stageSelection.FullTest();
 
             // 11. Single Racing
-            yield return WaitingScene(Services.Constants.SceneName.SingleRacingPlay);
+            yield return WaitingScene(Services.Constants.SceneName.SingleRacingStage);
             TestAutomation.Scene.SingleRacing singleRacing = new Scene.SingleRacing();
             yield return singleRacing.FullTest();
         }
@@ -148,7 +148,7 @@ namespace TestAutomation
         }
 
         [UnityTest]
-        public IEnumerator UnitTestSingleRacingGameResult()
+        public IEnumerator UnitTestSingleRacingResult()
         {
             TestAutomation.Scene.SingleRacing singleRacing = new Scene.SingleRacing();
             yield return singleRacing.UnitTestResult();

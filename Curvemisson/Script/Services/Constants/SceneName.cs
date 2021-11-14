@@ -10,7 +10,7 @@
         public const string Shop = "Shop";
         public const string StageSelection = "StageSelection";
         public const string SingleRacingTutorial = "SingleRacingTutorial";
-        public const string SingleRacingPlay = "SingleRacingPlay";
+        public const string SingleRacingStage = "SingleRacingStage";
         public const string SingleRacingResult = "SingleRacingResult";
         public const string Loading = "Loading";
     }

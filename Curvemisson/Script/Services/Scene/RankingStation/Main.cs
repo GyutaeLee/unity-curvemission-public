@@ -30,6 +30,7 @@ namespace Services.Scene.RankingStation
 
         private void Start()
         {
+            Gui.FadeEffect.Instance.InActiveFadeEffectObject();
             StartCoroutine(CoroutineInitializeSingleRacingRanking());
         }
 
@@ -62,7 +63,7 @@ namespace Services.Scene.RankingStation
 
         private void DoRequestSingleRacingRankingFailedProcess()
         {
-            string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ThreadWaitTimeOver);
+            string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.RequestResult.Game.ThreadWaitTimeOver);
             Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
 
             SceneManager.LoadScene(User.User.Instance.BeforeSceneName);

@@ -1,10 +1,8 @@
 ﻿using System.Collections;
-using NUnit.Framework;
 
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.TestTools;
 
 namespace TestAutomation.Scene
 {
@@ -16,8 +14,8 @@ namespace TestAutomation.Scene
 
             Services.User.User.Instance.CurrentStageID = 1001;
 
-            SceneManager.LoadScene(Services.Constants.SceneName.SingleRacingPlay);
-            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingPlay);
+            SceneManager.LoadScene(Services.Constants.SceneName.SingleRacingStage);
+            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingStage);
         }
 
         public IEnumerator SceneTest()
@@ -69,7 +67,7 @@ namespace TestAutomation.Scene
 
         private IEnumerator PauseCanvasTest()
         {
-            while (Services.Static.Game.IsGameStatePlaying() == false)
+            while (Services.Static.Game.IsGameProceeding() == false)
             {
                 yield return null;
             }
@@ -94,8 +92,8 @@ namespace TestAutomation.Scene
             yield return Test.Delay(0.5f);
 
             // 5. 게임 시작 대기
-            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingPlay);
-            while (Services.Static.Game.IsGameStatePlaying() == false)
+            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingStage);
+            while (Services.Static.Game.IsGameProceeding() == false)
             {
                 yield return null;
             }
@@ -122,8 +120,8 @@ namespace TestAutomation.Scene
             yield return stageSelection.ClickStageButton(1001);
 
             // 10. 게임 시작 대기
-            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingPlay);
-            while (Services.Static.Game.IsGameStatePlaying() == false)
+            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingStage);
+            while (Services.Static.Game.IsGameProceeding() == false)
             {
                 yield return null;
             }
@@ -131,7 +129,7 @@ namespace TestAutomation.Scene
 
         private IEnumerator PlayTest()
         {
-            while (Services.Static.Game.IsGameStatePlaying() == false)
+            while (Services.Static.Game.IsGameProceeding() == false)
             {
                 yield return null;
             }
@@ -139,7 +137,7 @@ namespace TestAutomation.Scene
             Services.Vehicle.Input input = null;
             Services.Useful.ObjectFinder.FindComponentInAllChild<Services.Vehicle.Input>(ref input, GameObject.Find("Game"), "Vehicle", true);
 
-            while (SceneManager.GetActiveScene().name == Services.Constants.SceneName.SingleRacingPlay)
+            while (SceneManager.GetActiveScene().name == Services.Constants.SceneName.SingleRacingStage)
             {
                 if (Services.Scene.SingleRacing.Lap.Instance.CurrentLapCount == 1)
                 {
@@ -159,7 +157,7 @@ namespace TestAutomation.Scene
 
         private IEnumerator PlayTestFastMode()
         {
-            while (Services.Static.Game.IsGameStatePlaying() == false)
+            while (Services.Static.Game.IsGameProceeding() == false)
             {
                 yield return null;
             }
@@ -167,7 +165,7 @@ namespace TestAutomation.Scene
             Services.Vehicle.Controller controller = null;
             Services.Useful.ObjectFinder.FindComponentInAllChild<Services.Vehicle.Controller>(ref controller, GameObject.Find("Game"), "Vehicle", true);
 
-            while (SceneManager.GetActiveScene().name == Services.Constants.SceneName.SingleRacingPlay)
+            while (SceneManager.GetActiveScene().name == Services.Constants.SceneName.SingleRacingStage)
             {
                 controller.Test_FastAcceleration(20.0f);
                 controller.Curve(true);

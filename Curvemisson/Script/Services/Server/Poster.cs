@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Firebase.Database;
+using Firebase.Storage;
 
 using Services.Item.Avatar;
 using Services.Delegate;
@@ -13,6 +13,7 @@ using Services.Gui;
 
 using Services.Enum.Inventory;
 using Services.Enum.Shop;
+using System.Threading.Tasks;
 
 namespace Services.Server
 {
@@ -264,6 +265,9 @@ namespace Services.Server
             string progressCircleKey = "CheckAndPostUserSingleRacingRankingToFirebaseDB";
             string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
 
+            ProgressCircle.Instance.Open(progressCircleKey);
+            ProgressCircle.Instance.ScheduleClose(progressCircleKey, progressFlagKey);
+
             FirebaseDatabase.DefaultInstance.GetReference(baseKey).RunTransaction(mutableData =>
             {
                 ProgressCircle.Instance.CloseScheduled(progressFlagKey);
@@ -306,14 +310,10 @@ namespace Services.Server
             bool isOwnRecord = false;
 
             if (FindErasedValueInSingleRacingRanking(SingleRacingRankings, stageID, ref maxTime, ref erasedValue, ref isOwnRecord) == false)
-            {
                 return false;
-            }
 
             if (ModifySingleRacingRankingByUserData(stageID, maxTime, isOwnRecord, erasedValue, ref mutableData, ref SingleRacingRankings) == false)
-            {
                 return false;
-            }
 
             return true;
         }
@@ -445,9 +445,16 @@ namespace Services.Server
         public static void PostUserBaseInfoToFirebaseDB(string nickname)
         {
             string baseKey = "security-related";
+            string progressCircleKey = "PostUserBaseInfoToFirebaseDB";
+            string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
+
+            ProgressCircle.Instance.Open(progressCircleKey);
+            ProgressCircle.Instance.ScheduleClose(progressCircleKey, progressFlagKey);
 
             FirebaseDatabase.DefaultInstance.GetReference(baseKey).GetValueAsync().ContinueWith(task =>
             {
+                ProgressCircle.Instance.CloseScheduled(progressFlagKey);
+
                 if (task.IsFaulted)
                 {
                     Debug.Log("ERROR : DB not found");
@@ -464,7 +471,7 @@ namespace Services.Server
         }
 
         // TODO : Parts 는 함수 따로 만들어야함
-        public static void PostUserEquipment(Enum.Inventory.InventoryType inventoryType, string equipmentTextKey, int equipmentInfoID)
+        public static void PushUserEquipment(Enum.Inventory.InventoryType inventoryType, string equipmentTextKey, int equipmentInfoID)
         {
             string baseKey = Manager.Instance.GetFirebaseDBUserBaseKey();
             string inventoryKey = Static.Inventory.ConvertInventoryTypeToTextKey(inventoryType);
@@ -490,6 +497,33 @@ namespace Services.Server
             jsonData.Add("security-related", User.User.Instance.IsTestUser());
 
             Manager.Instance.DatabaseReference.Child("security-related" + Manager.Instance.FirebaseUser.UserId + "security-related").SetRawJsonValueAsync(jsonData.ToString());
+        }
+
+        public static void PostUserSingleRacingRecordingFile(int stageID)
+        {
+            string progressCircleKey = "PostUserSingleRacingRecordingFile";
+            string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
+
+            ProgressCircle.Instance.Open(progressCircleKey);
+            ProgressCircle.Instance.ScheduleClose(progressCircleKey, progressFlagKey);
+
+            StorageReference storageReference = FirebaseStorage.DefaultInstance.RootReference;
+            StorageReference singleRacingRecordingReference = storageReference.Child(Server.Manager.Instance.FirebaseUser.UserId + "/" + "security-related" + Static.Replay.GetUserSingleRacingReplayFileName(stageID));
+            string singleRacingRecordFilePath = Static.Replay.GetUserSingleRacingReplayFilePath(stageID);
+            singleRacingRecordingReference.PutFileAsync(singleRacingRecordFilePath).ContinueWith((Task<StorageMetadata> task) =>
+            {
+                ProgressCircle.Instance.CloseScheduled(progressFlagKey);
+
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.Log(task.Exception.ToString());
+                }
+                else
+                {
+                    Firebase.Storage.StorageMetadata metadata = task.Result;
+                    Debug.Log("Upload Single Racing Recording Success - size : " + metadata.SizeBytes);
+                }
+            });
         }
     }
 }

@@ -523,7 +523,7 @@ namespace Services.Scene.Shop
 
             if (Thread.Waiter.GetThreadWaitIsPurchaseResultCompleted() == false)
             {
-                string errorText = string.Format(Manager.Instance.GetText(TextType.Game, (int)Enum.Error.GameError.ThreadWaitTimeOver));
+                string errorText = string.Format(Manager.Instance.GetText(TextType.Game, (int)Enum.RequestResult.Game.ThreadWaitTimeOver));
                 Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
                 yield break;
             }

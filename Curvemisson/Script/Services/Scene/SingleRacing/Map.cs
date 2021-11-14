@@ -7,14 +7,6 @@ namespace Services.Scene.SingleRacing
         private GameObject halfOfFinishLap;
         private GameObject finishLapObject;
 
-        private void Awake()
-        {
-            if (Map.Instance == null)
-            { 
-                Map.Instance = this;
-            }
-        }
-
         private void Start()
         {
             GameObject game = GameObject.Find("Game");

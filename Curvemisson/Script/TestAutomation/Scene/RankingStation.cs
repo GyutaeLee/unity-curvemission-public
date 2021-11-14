@@ -1,11 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
 
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using UnityEngine.TestTools;
 
 namespace TestAutomation.Scene
 {
@@ -42,14 +39,14 @@ namespace TestAutomation.Scene
             // 1-1. User Record Card 열기
             yield return ClickSingleRacingUserRecordCardButton();
 
-            // 1-2. Total Ranking 열기
+            // 1-3. Total Ranking 열기
             yield return ClickSingleRacingTotalRankingButton();
 
-            // 1-3. Driver Card 모두 열기/닫기
-            yield return OpenSingleRacingTotalRankingDriverRecordCardAll();
+            // 1-4. Other User Card 모두 열기/닫기
+            yield return OpenSingleRacingTotalRankingOtherUserRecordCardAll();
 
-            // 1-4. Total Ranking 닫기
-            yield return ClickSingleRacingTOtalRankingCloseButton();
+            // 1-5. Total Ranking 닫기
+            yield return ClickSingleRacingTotalRankingCloseButton();
 
             // TODO : Map Combobox 기능 생기면 추가 필요
         }
@@ -98,7 +95,7 @@ namespace TestAutomation.Scene
             yield return Test.Delay(0.5f);
         }
 
-        private IEnumerator ClickSingleRacingTOtalRankingCloseButton()
+        private IEnumerator ClickSingleRacingTotalRankingCloseButton()
         {
             Button button = null;
             Services.Useful.ObjectFinder.FindComponentInAllChild<Button>(ref button, this.singleRacingRankingStationCanvas, "BackButton", true);
@@ -107,7 +104,7 @@ namespace TestAutomation.Scene
             yield return Test.Delay(0.5f);
         }
 
-        private IEnumerator OpenSingleRacingTotalRankingDriverRecordCardAll()
+        private IEnumerator OpenSingleRacingTotalRankingOtherUserRecordCardAll()
         {
             GameObject topRankingObject = Services.Useful.ObjectFinder.GetGameObjectInAllChild(this.singleRacingRankingStationCanvas, "TopRankingObject", true);
             List<Button> topRankingButtons = new List<Button>();
@@ -127,16 +124,16 @@ namespace TestAutomation.Scene
                 elseRankingButtons.Add(button);
             }
 
-            GameObject driverRecordCardObject = Services.Useful.ObjectFinder.GetGameObjectInAllChild(this.singleRacingRankingStationCanvas, "DriverRecordCardObject", true);
-            Button driverRecordCardCloseButton = null;
-            Services.Useful.ObjectFinder.FindComponentInAllChild(ref driverRecordCardCloseButton, driverRecordCardObject, "CloseButton", true);
+            GameObject otherUserRecordCardObject = Services.Useful.ObjectFinder.GetGameObjectInAllChild(this.singleRacingRankingStationCanvas, "OtherUserRecordCardObject", true);
+            Button otherUserRecordCardCloseButton = null;
+            Services.Useful.ObjectFinder.FindComponentInAllChild(ref otherUserRecordCardCloseButton, otherUserRecordCardObject, "CloseButton", true);
 
             for (int i = 0; i < topRankingButtons.Count; i++)
             {
                 topRankingButtons[i].onClick.Invoke();
                 yield return Test.Delay(0.5f);
 
-                driverRecordCardCloseButton.onClick.Invoke();
+                otherUserRecordCardCloseButton.onClick.Invoke();
                 yield return Test.Delay(0.5f);
 
                 Debug.Log("[Ranking Station Test] : " + i + "번째 Top Ranking 버튼 클릭 완료");
@@ -147,7 +144,7 @@ namespace TestAutomation.Scene
                 elseRankingButtons[i].onClick.Invoke();
                 yield return Test.Delay(0.5f);
 
-                driverRecordCardCloseButton.onClick.Invoke();
+                otherUserRecordCardCloseButton.onClick.Invoke();
                 yield return Test.Delay(0.5f);
 
                 Debug.Log("[Ranking Station Test] : " + i + "번째 Else Ranking 버튼 클릭 완료");

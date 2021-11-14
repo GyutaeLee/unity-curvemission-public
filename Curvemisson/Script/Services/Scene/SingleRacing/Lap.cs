@@ -45,14 +45,6 @@ namespace Services.Scene.SingleRacing
             }
         }
 
-        private void Awake()
-        {
-            if (Lap.Instance == null)
-            {
-                Lap.Instance = this;
-            }
-        }
-
         private void Start()
         {
             this.currentLapCount = 1;
@@ -64,7 +56,7 @@ namespace Services.Scene.SingleRacing
 
         private void Update()
         {
-            if (GameLogic.Instance.IsGameStatePlaying() == false)
+            if (GameLogic.Instance.IsGameProceeding() == false)
                 return;
 
             this.currentLapTime += Time.deltaTime;

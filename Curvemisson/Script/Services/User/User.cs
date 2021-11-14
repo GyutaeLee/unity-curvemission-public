@@ -32,6 +32,10 @@ namespace Services.User
             public Dictionary<string, Dictionary<int, bool>> AvatarInventory;   
 
             public Dictionary<string, Dictionary<int, Dictionary<int, bool>>> CarInventory;      
+            // TODO : 딕셔너리 구조 수정 필요
+            //public Dictionary<int, Dictionary<int, bool>> CarInventoryCars;
+            //public Dictionary<int, Dictionary<int, bool>> CarInventoryPaints;
+            //public Dictionary<int, Dictionary<int, bool>> CarInventoryParts;
 
             public Dictionary<int, bool> OwnedStages;                                      
             public Dictionary<int, Dictionary<string, float>> SingleRacingRecords;        
@@ -107,6 +111,24 @@ namespace Services.User
         {
             if (scene.name == Constants.SceneName.Loading)
                 return;
+
+            if (scene.name == Constants.SceneName.SingleRacingStage)
+            {
+                this.BeforeSceneName = Constants.SceneName.Village;
+                return;
+            }
+
+            if (scene.name == Constants.SceneName.SingleRacingTutorial)
+            {
+                this.BeforeSceneName = Constants.SceneName.Village;
+                return;
+            }
+
+            if (scene.name == Constants.SceneName.SingleRacingResult)
+            {
+                this.BeforeSceneName = Constants.SceneName.Village;
+                return;
+            }
 
             this.BeforeSceneName = scene.name;
         }
@@ -277,7 +299,7 @@ namespace Services.User
         // TODO : Server로 바로 보내지 말고 모아서 보내도록 로직 수정
         public void SetEquippedCarItemCarInfoID(int carItemCarInfoID)
         {
-            Server.Poster.PostUserEquipment(Enum.Inventory.InventoryType.Car, "security-related", carItemCarInfoID);
+            Server.Poster.PushUserEquipment(Enum.Inventory.InventoryType.Car, "security-related", carItemCarInfoID);
             this.userData.EquipmentCar["security-related"] = carItemCarInfoID;
 
             SetCurrentCar();
@@ -285,7 +307,7 @@ namespace Services.User
 
         public void SetEquippedCarItemPaintInfoID(int carItemPaintInfoID)
         {
-            Server.Poster.PostUserEquipment(Enum.Inventory.InventoryType.Car, "security-related", carItemPaintInfoID);
+            Server.Poster.PushUserEquipment(Enum.Inventory.InventoryType.Car, "security-related", carItemPaintInfoID);
             this.userData.EquipmentCar["security-related"] = carItemPaintInfoID;
 
             SetCurrentCar();
@@ -294,24 +316,24 @@ namespace Services.User
         // TODO : Server로 바로 보내지 말고 모아서 보내도록 로직 수정
         public void ChangeEquippedAvatarItemHeadInfoID(int avatarItemHeadInfoID)
         {
-            Server.Poster.PostUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemHeadInfoID);
-            this.userData.EquipmentAvatar["security-related"] = avatarItemHeadInfoID;
+            Server.Poster.PushUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemHeadInfoID);
+            this.userData.EquipmentAvatar["head"] = avatarItemHeadInfoID;
 
             SetCurrentAvatar();
         }
 
         public void ChangeEquippedAvatarItemTopInfoID(int avatarItemTopInfoID)
         {
-            Server.Poster.PostUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemTopInfoID);
-            this.userData.EquipmentAvatar["security-related"] = avatarItemTopInfoID;
+            Server.Poster.PushUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemTopInfoID);
+            this.userData.EquipmentAvatar["top"] = avatarItemTopInfoID;
 
             SetCurrentAvatar();
         }
 
         public void ChangeEquippedAvatarItemBottomInfoID(int avatarItemBottomInfoID)
         {
-            Server.Poster.PostUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemBottomInfoID);
-            this.userData.EquipmentAvatar["security-related"] = avatarItemBottomInfoID;
+            Server.Poster.PushUserEquipment(Enum.Inventory.InventoryType.Avatar, "security-related", avatarItemBottomInfoID);
+            this.userData.EquipmentAvatar["bottom"] = avatarItemBottomInfoID;
 
             SetCurrentAvatar();
         }

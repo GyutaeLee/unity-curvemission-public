@@ -11,7 +11,11 @@ namespace Services.Scene.SingleRacing
         private GameObject pauseCanvas;
 
         [SerializeField]
-        private GameObject playingCanvas;
+        private GameObject gameCanvas;
+        [SerializeField]
+        private GameObject playUI;
+        [SerializeField]
+        private GameObject replayUI;
 
         [SerializeField]
         private Text currentLapCountText;
@@ -55,20 +59,12 @@ namespace Services.Scene.SingleRacing
         private Text worstFrameText;
 #endif
 
-        private void Awake()
-        {
-            if (IngameUI.Instance == null)
-            {
-                IngameUI.Instance = this;
-            }
-        }
-
         private void Update()
         {
 #if (DEBUG_MODE)
             UpdateDebugUI();
 #endif
-            if (GameLogic.Instance.IsGameStatePlaying() == false)
+            if (GameLogic.Instance.IsGameProceeding() == false)
                 return;
 
             this.currentLapCountText.text = string.Format("{0:d} / {1:d}", Lap.Instance.CurrentLapCount, Lap.Instance.FinishLapCount);
@@ -78,17 +74,31 @@ namespace Services.Scene.SingleRacing
 
         public void StartIntroAction(System.Action StartGame)
         {
-#if (UNITY_EDITOR)
-            Gui.FadeEffect.Instance.InActiveFadeEffectObject();
-            StartGame();
-            this.playingCanvas.SetActive(true);
-#else
+//#if (UNITY_EDITOR)
+//            Gui.FadeEffect.Instance.InActiveFadeEffectObject();
+//            StartGame();
+//            ActiveGameCanvasChildUI();
+//#else
             const int CountDownSpriteCount = 27;
             const int GoSpriteCount = 12;
 
             Gui.FadeEffect.Instance.StartCoroutineFadeEffect(true);
             StartCoroutine(CoroutineGameIntroCountDown(StartGame, 2.0f, 0.1f, CountDownSpriteCount, GoSpriteCount));
-#endif
+//#endif
+        }
+
+        private void ActiveGameCanvasChildUI()
+        {
+            this.gameCanvas.SetActive(true);
+
+            if (Static.Replay.IsReplayMode == true)
+            {
+                this.replayUI.SetActive(true);
+            }
+            else
+            {
+                this.playUI.SetActive(true);
+            }
         }
 
         private IEnumerator CoroutineGameIntroCountDown(System.Action StartGame, float beginDelayTerm, float countDelayTerm, int countDownSptCount, int goSptCount)
@@ -100,7 +110,7 @@ namespace Services.Scene.SingleRacing
             yield return StartCoroutine(CoroutineCountDownAnimation(countDelayTerm, countDownSptCount));
 
             StartGame();
-            this.playingCanvas.SetActive(true);
+            ActiveGameCanvasChildUI();
 
             yield return StartCoroutine(CoroutineGoAnimation(countDelayTerm, countDownSptCount, goSptCount));
 
@@ -178,23 +188,23 @@ namespace Services.Scene.SingleRacing
         public void PauseGame()
         {
             this.pauseCanvas.SetActive(true);
-            this.playingCanvas.SetActive(false);
+            this.gameCanvas.SetActive(false);
         }
 
         public void ResumeGame()
         {
             this.pauseCanvas.SetActive(false);
-            this.playingCanvas.SetActive(true);
+            this.gameCanvas.SetActive(true);
         }
 
         public void FinishGame()
         {
-            this.playingCanvas.SetActive(false);
+            this.gameCanvas.SetActive(false);
         }
 
         public void FailGame()
         {
-            this.playingCanvas.SetActive(false);
+            this.gameCanvas.SetActive(false);
             this.deathCanavs.SetActive(true);
 
             this.deathLapTimeText.text = string.Format("{0:N3}", Lap.Instance.CurrentLapTime);

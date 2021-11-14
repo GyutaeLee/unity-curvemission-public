@@ -4,10 +4,18 @@ namespace Services.Vehicle
 {
     public class Input : MonoBehaviour
     {
-        private bool isScreenTouched;
+        public bool IsScreenTouched { get; private set; }
 
         [SerializeField]
         private Controller controller;
+
+        private void Start()
+        {
+            if (Static.Replay.IsReplayMode == true)
+            {
+                this.enabled = false;
+            }
+        }
 
         private void FixedUpdate()
         {
@@ -17,22 +25,22 @@ namespace Services.Vehicle
         private void UpdateScreenTouch()
         {
 #if (UNITY_ANDROID || UNITY_IOS) && (!UNITY_EDITOR)
-        if (UnityEngine.Input.touchCount > 0)
-        {
-            this.isScreenTouched = true;
-        }
-        else
-        {
-            this.isScreenTouched = false;
-        }
+            if (UnityEngine.Input.touchCount > 0)
+            {
+                this.IsScreenTouched = true;
+            }
+            else
+            {
+                this.IsScreenTouched = false;
+            }
 #else
             if (UnityEngine.Input.GetMouseButton(0) == true || UnityEngine.Input.GetKey(KeyCode.Space) == true)
             {
-                this.isScreenTouched = true;
+                this.IsScreenTouched = true;
             }
 #endif
 
-            if (this.isScreenTouched == true)
+            if (this.IsScreenTouched == true)
             {
                 this.controller.Acceleration();
             }
@@ -42,13 +50,13 @@ namespace Services.Vehicle
                 this.controller.Curve(true);
             }
 
-            this.isScreenTouched = false;
+            this.IsScreenTouched = false;
         }
 
 #if (UNITY_INCLUDE_TESTS)
         public void Test_TouchScreen()
         {
-            this.isScreenTouched = true;
+            this.IsScreenTouched = true;
         }
 #endif
     }

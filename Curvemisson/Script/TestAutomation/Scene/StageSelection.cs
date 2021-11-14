@@ -29,7 +29,7 @@ namespace TestAutomation.Scene
             Services.Useful.ObjectFinder.FindComponentInAllChild<Button>(ref button, this.canvas, "Stage" + stageID + "Button", true);
             button.onClick.Invoke();
 
-            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingPlay);
+            yield return Test.WaitingScene(Services.Constants.SceneName.SingleRacingStage);
         }
     }
 }

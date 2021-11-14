@@ -479,7 +479,7 @@ namespace Services.Scene.Shop
 
             if (Thread.Waiter.GetThreadWaitIsPurchaseResultCompleted() == false)
             {
-                string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ThreadWaitTimeOver);
+                string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.RequestResult.Game.ThreadWaitTimeOver);
                 Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
                 yield break;
             }

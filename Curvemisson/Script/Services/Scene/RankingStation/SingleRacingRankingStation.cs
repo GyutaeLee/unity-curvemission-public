@@ -3,13 +3,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-using Services.Item;
+using Services.Thread;
+using Services.Delegate;
+
 using Services.Character;
 using Services.GameText;
 using Services.Useful;
 
-using Services.Enum.Item;
 using Services.Enum.GameText;
+using System.Collections;
 
 namespace Services.Scene.RankingStation
 {
@@ -36,6 +38,8 @@ namespace Services.Scene.RankingStation
         {
             public Character.Avatar Avatar;
 
+            public string UserID;
+
             public Image BestLapCarImage;
 
             public Button RecordCardButton;
@@ -48,6 +52,8 @@ namespace Services.Scene.RankingStation
         private class RecordCard
         {
             public AvatarUI AvatarUI;
+
+            public string UserID;
 
             public Image BestLapCarImage;
 
@@ -67,8 +73,8 @@ namespace Services.Scene.RankingStation
         private RecordCard userRecordCard;
         private GameObject userRecordCardObject;
 
-        private RecordCard driverRecordCard;
-        private GameObject driverRecordCardObject;
+        private RecordCard otherUserRecordCard;
+        private GameObject otherUserRecordCardObject;
 
         private List<RankerRecordLine> topRankerRecordLines;
         private List<RankerRecordLine> elseRankerRecordLines;
@@ -91,6 +97,9 @@ namespace Services.Scene.RankingStation
 
         private Button userRecordCardButton;
         private Button totalRankingButton;
+
+        private Button userRecordReplayButton;
+        private Button otherUserRecordReplayButton;
 
         private Button backButton;
             
@@ -131,10 +140,10 @@ namespace Services.Scene.RankingStation
 
             GameObject canvas = GameObject.Find("Canvas");
             ObjectFinder.FindGameObjectInAllChild(ref this.userRecordCardObject, canvas, "UserRecordCardObject", true);
-            ObjectFinder.FindGameObjectInAllChild(ref this.driverRecordCardObject, canvas, "DriverRecordCardObject", true);
+            ObjectFinder.FindGameObjectInAllChild(ref this.otherUserRecordCardObject, canvas, "OtherUserRecordCardObject", true);
 
             PrepareRecordCardObject(ref this.userRecordCard, this.userRecordCardObject);
-            PrepareRecordCardObject(ref this.driverRecordCard, this.driverRecordCardObject);
+            PrepareRecordCardObject(ref this.otherUserRecordCard, this.otherUserRecordCardObject);
 
             PrepareTotalTopRankerRecordLines();
             PrepareTotalElseRankerRecordLines();
@@ -169,7 +178,7 @@ namespace Services.Scene.RankingStation
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.BestLapTimeText, rankerRecordLineObject, "BestLapTimeText", true);
 
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RecordCardButton, rankerRecordLineObject, "RecordCardButton", true);
-                AddOpenDriverRankingUIListener(rankerRecordLine.RecordCardButton, i);
+                AddOpenOtherUserRankingUIListener(rankerRecordLine.RecordCardButton, i);
 
                 this.topRankerRecordLines[i] = rankerRecordLine;
             }
@@ -190,26 +199,26 @@ namespace Services.Scene.RankingStation
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RankingNumberText, rankerRecordLineObject, "RankingNumberText", true);
 
                 ObjectFinder.FindComponentInAllChild(ref rankerRecordLine.RecordCardButton, rankerRecordLineObject, "RecordCardButton", true);
-                AddOpenDriverRankingUIListener(rankerRecordLine.RecordCardButton, i + Constants.ElseRankingFirstIndex);
+                AddOpenOtherUserRankingUIListener(rankerRecordLine.RecordCardButton, i + Constants.ElseRankingFirstIndex);
 
                 this.elseRankerRecordLines[i] = rankerRecordLine;
             }
         }
 
-        private void AddOpenDriverRankingUIListener(Button button, int index)
+        private void AddOpenOtherUserRankingUIListener(Button button, int index)
         {
-            button.onClick.AddListener(() => { OpenDriverRecordCard(index); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+            button.onClick.AddListener(() => { OpenOtherUserRecordCard(index); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
         }
 
-        private void OpenDriverRecordCard(int index)
+        private void OpenOtherUserRecordCard(int index)
         {
-            if (ChangeDriverRecordCard(index) == true)
+            if (ChangeOtherUserRecordCard(index) == true)
             {
-                this.driverRecordCardObject.SetActive(true);
+                this.otherUserRecordCardObject.SetActive(true);
             }
         }
 
-        private bool ChangeDriverRecordCard(int index)
+        private bool ChangeOtherUserRecordCard(int index)
         {
             RankerRecordLine rankerRecordLine;
 
@@ -223,27 +232,27 @@ namespace Services.Scene.RankingStation
             }
 
             if (rankerRecordLine.Avatar == null)
-            {
                 return false;
-            }
 
-            if (this.driverRecordCard.AvatarUI == null)
+            if (this.otherUserRecordCard.AvatarUI == null)
             {
-                this.driverRecordCard.AvatarUI = new AvatarUI(rankerRecordLine.Avatar, this.driverRecordCardObject);
+                this.otherUserRecordCard.AvatarUI = new AvatarUI(rankerRecordLine.Avatar, this.otherUserRecordCardObject);
             }
             else
             {
-               this.driverRecordCard.AvatarUI.ChangeAvatar(rankerRecordLine.Avatar);
+               this.otherUserRecordCard.AvatarUI.ChangeAvatar(rankerRecordLine.Avatar);
             }
 
-            this.driverRecordCard.BestLapCarImage.enabled = true;
-            this.driverRecordCard.BestLapCarImage.sprite = rankerRecordLine.BestLapCarImage.sprite;
+            this.otherUserRecordCard.UserID = rankerRecordLine.UserID;
 
-            this.driverRecordCard.MapNameText.text = Manager.Instance.GetText(TextType.Stage, this.currentRankingStageID);
+            this.otherUserRecordCard.BestLapCarImage.enabled = true;
+            this.otherUserRecordCard.BestLapCarImage.sprite = rankerRecordLine.BestLapCarImage.sprite;
+
+            this.otherUserRecordCard.MapNameText.text = Manager.Instance.GetText(TextType.Stage, this.currentRankingStageID);
             //this.sprDriverIDCard.TXT_RankingNumber.text = copy.TXT_RankingNumber.text;
             //this.sprDriverIDCard.TXT_BestLapCar
-            this.driverRecordCard.BestLapTimeText.text = rankerRecordLine.BestLapTimeText.text;
-            this.driverRecordCard.NicknameText.text = rankerRecordLine.NicknameText.text;
+            this.otherUserRecordCard.BestLapTimeText.text = rankerRecordLine.BestLapTimeText.text;
+            this.otherUserRecordCard.NicknameText.text = rankerRecordLine.NicknameText.text;
 
             return true;
         }
@@ -269,6 +278,12 @@ namespace Services.Scene.RankingStation
             ObjectFinder.FindComponentInAllChild(ref this.totalRankingButton, this.singlePlayRankingStationCanvas, "TotalRankingButton", true);
             this.userRecordCardButton.onClick.AddListener(() => { OpenUserRecordCard(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
             this.totalRankingButton.onClick.AddListener(() => { OpenTotalRanking(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+
+            ObjectFinder.FindComponentInAllChild(ref this.userRecordReplayButton, this.userRecordCardObject, "RecordReplayButton", true);
+            this.userRecordReplayButton.onClick.AddListener(() => { ReplayUserRecording(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
+
+            ObjectFinder.FindComponentInAllChild(ref this.otherUserRecordReplayButton, this.otherUserRecordCardObject, "RecordReplayButton", true);
+            this.otherUserRecordReplayButton.onClick.AddListener(() => { RequestAndPlayReplayRecording(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
 
             ObjectFinder.FindComponentInAllChild(ref this.backButton, this.singlePlayRankingStationCanvas, "BackButton", true);
             this.backButton.onClick.AddListener(() => { ClickBackButton(); Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Gui, (int)Enum.Sound.Effect.Gui.ClickButton_1); });
@@ -463,6 +478,7 @@ namespace Services.Scene.RankingStation
                     this.userRecordCard.AvatarUI.ChangeAvatar(avatar); 
                 }
 
+                this.userRecordCard.UserID = Server.Manager.Instance.FirebaseUser.UserId;
 
                 int recordCarInfoID = (int)User.User.Instance.GetSingleRacingRecords(stageID, "security-related");
                 int recordPaintInfoID = (int)User.User.Instance.GetSingleRacingRecords(stageID, "security-related");
@@ -567,6 +583,44 @@ namespace Services.Scene.RankingStation
                     this.elseRankerRecordLines[i].RankingNumberText.text = "-";
                     this.elseRankerRecordLines[i].NicknameText.text = "-";
                 }
+            }
+        }
+
+        private void ReplayUserRecording()
+        {
+            User.User.Instance.CurrentStageID = this.currentRankingStageID;
+            Static.Replay.ActiveUserReplayMode();
+            Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacingStage);
+        }
+
+        private void RequestAndPlayReplayRecording()
+        {
+            Debug.Log("User ID : " + this.otherUserRecordCard.UserID + " Stage ID : " + this.currentRankingStageID);
+            StartCoroutine(CoroutineRequestAndPlayReplayRecording());
+        }
+
+        private IEnumerator CoroutineRequestAndPlayReplayRecording()
+        {
+            Server.Requester.RequestOtherUserSingleRacingRecordingFile(this.otherUserRecordCard.UserID, this.currentRankingStageID);
+
+            delegateGetFlag delegateGetFlag = new delegateGetFlag(Thread.Waiter.GetThreadWaitIsServerRequestResultCompleted);
+            yield return StartCoroutine(Thread.Waiter.CoroutineThreadWait(delegateGetFlag));
+
+            if (Thread.Waiter.GetThreadWaitIsServerRequestResultCompleted() == false)
+            {
+                Gui.Popup.Manager.Instance.OpenCheckPopup("TODO : 다운로드 시간 초과");
+                yield break;
+            }
+
+            if (Thread.Waiter.Thread_ServerRequestResult == Enum.RequestResult.Server.Success)
+            {
+                User.User.Instance.CurrentStageID = this.currentRankingStageID;
+                Static.Replay.ActiveOtherUserReplayMode();
+                Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacingStage);
+            }
+            else
+            {
+                Gui.Popup.Manager.Instance.OpenCheckPopup("TODO : 다운로드 실패");
             }
         }
     }

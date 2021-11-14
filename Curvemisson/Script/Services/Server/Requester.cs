@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 
 using Firebase.Database;
+using Firebase.Storage;
 
 using Services.Gui;
+using System.Threading.Tasks;
 
 namespace Services.Server
 {
@@ -52,6 +54,7 @@ namespace Services.Server
             FirebaseDatabase.DefaultInstance.GetReference(baseKey).LimitToFirst(Constants.Record.SingleRacingRankingMaxCount).GetValueAsync().ContinueWith(task =>
             {
                 ProgressCircle.Instance.CloseScheduled(progressFlagKey);
+                Thread.Waiter.ActiveThreadWait();
 
                 if (task.IsFaulted)
                 {
@@ -59,11 +62,39 @@ namespace Services.Server
                 }
                 else if (task.IsCompleted)
                 {
-                    Thread.Waiter.ActiveThreadWait();
                     action(task.Result);
                 }
             });
         }
 
+        public static void RequestOtherUserSingleRacingRecordingFile(string userID, int stageID)
+        {
+            string progressCircleKey = "RequestOtherUserSingleRacingRecordingFile";
+            string progressFlagKey = ProgressCircle.Instance.GetProgressFlagKey(progressCircleKey);
+
+            ProgressCircle.Instance.Open(progressCircleKey);
+            ProgressCircle.Instance.ScheduleClose(progressCircleKey, progressFlagKey);
+
+            StorageReference storageReference = FirebaseStorage.DefaultInstance.RootReference;
+            StorageReference singleRacingRecordingReference = storageReference.Child(userID + "/" + "security-related" + Static.Replay.GetUserSingleRacingReplayFileName(stageID));
+            string recordingFilePath = Static.Replay.GetOtherUserSingleRacingReplayFilePath();
+
+            Services.Thread.Waiter.InActiveThreadWaitServerRequestResult();
+            singleRacingRecordingReference.GetFileAsync(recordingFilePath).ContinueWith(task =>
+            {
+                ProgressCircle.Instance.CloseScheduled(progressFlagKey);
+
+                if (!task.IsFaulted && !task.IsCanceled)
+                {
+                    Thread.Waiter.ActiveThreadWaitServerRequestResult(Enum.RequestResult.Server.Success);
+                    Debug.Log("File downloaded.");
+                }
+                else
+                {
+                    Thread.Waiter.ActiveThreadWaitServerRequestResult(Enum.RequestResult.Server.DownloadRecordingFileFailaure);
+                    Debug.Log("File download failure");
+                }
+            });
+        }
     }
 }

@@ -9,6 +9,8 @@ namespace Services.Vehicle
 {
     public class Animation : MonoBehaviour
     {
+        public int CarItemCarInfoID { get; private set; }
+        public int CarItemPaintInfoID { get; private set; }
         private Dictionary<string, Sprite> carSpriteSheet;
 
         private bool isBoosterAnimationEnabled;
@@ -26,19 +28,23 @@ namespace Services.Vehicle
 
         private void Start()
         {
-            InitializeAnimation();
+            if (Static.Replay.IsReplayMode == false)
+            {
+                InitializeAnimation(User.User.Instance.CurrentCar.CarInfoID, User.User.Instance.CurrentCar.PaintInfoID);
+            }
         }
 
         private void LateUpdate()
         {
             LateUpdateAnimationSprite();
+            UpdateAnimationSpeed(1.0f);
         }
 
-        private void InitializeAnimation()
+        public void InitializeAnimation(int carItemCarInfoID, int carItemPaintInfoID)
         {
-            int carItemCarInfoID = User.User.Instance.CurrentCar.CarInfoID;
-            int carItemPaintInfoID = User.User.Instance.CurrentCar.PaintInfoID;
-            LoadAnimationResource(carItemCarInfoID, carItemPaintInfoID);
+            this.CarItemCarInfoID = carItemCarInfoID;
+            this.CarItemPaintInfoID = carItemPaintInfoID;
+            LoadAnimationResource(this.CarItemCarInfoID, this.CarItemPaintInfoID);
 
             SetBoosterObjects();
 
@@ -79,7 +85,7 @@ namespace Services.Vehicle
 
         public void UpdateAnimationSpeed(float animationSpeed)
         {   
-            if (Static.Game.IsGameStatePlaying() == false)
+            if (Static.Game.IsGameProceeding() == false)
             {
                 this.animator.speed = 0;
                 return;

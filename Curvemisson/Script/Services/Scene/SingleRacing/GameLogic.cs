@@ -49,14 +49,6 @@ namespace Services.Scene.SingleRacing
 
         private int currentStageID;
 
-        private void Awake()
-        {
-            if (GameLogic.Instance == null)
-            {
-                GameLogic.Instance = this;
-            }
-        }
-
         private void Start()
         {
             this.currentGameState = GameState.Intro;
@@ -67,14 +59,24 @@ namespace Services.Scene.SingleRacing
 
         private void StartGame()
         {
-            this.CurrentGameState = GameState.Playing;
+            this.CurrentGameState = GameState.Play;
+
+            if (Static.Replay.IsReplayMode == true)
+            {
+                Replay.Player.Instance.StartReplay();
+            }
+            else
+            {
+                Replay.Recorder.Instance.StartRecording();
+            }
+
             Sound.Bgm.Manager.Instance.Play(Enum.Sound.Bgm.Type.Racing, (int)Enum.Sound.Bgm.Racing.ValsanVilalge);
         }
 
         public void RetrytGame()
         {
             Time.timeScale = 1.0f;
-            Scene.Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacingPlay);
+            Scene.Loading.Main.LoadScene(Services.Constants.SceneName.SingleRacingStage);
         }
 
         public void PauseGame()
@@ -82,18 +84,34 @@ namespace Services.Scene.SingleRacing
             Time.timeScale = 0.0f;
             this.CurrentGameState = GameState.Pause;
 
-            IngameUI.Instance.PauseGame();
+            if (Static.Replay.IsReplayMode == true)
+            {
+                Replay.Player.Instance.PauseReplay();
+            }
+            else
+            {
+                Replay.Recorder.Instance.PauseRecording();
+            }
 
+            IngameUI.Instance.PauseGame();
             Sound.Bgm.Manager.Instance.Pause();
         }
 
         public void ResumeGame()
         {
             Time.timeScale = 1.0f;
-            this.CurrentGameState = GameState.Playing;
+            this.CurrentGameState = GameState.Play;
+
+            if (Static.Replay.IsReplayMode == true)
+            {
+                Replay.Player.Instance.ResumeReplay();
+            }
+            else
+            {
+                Replay.Recorder.Instance.ResumeRecording();
+            }
 
             IngameUI.Instance.ResumeGame();
-
             Sound.Bgm.Manager.Instance.Resume();
         }
 
@@ -105,15 +123,42 @@ namespace Services.Scene.SingleRacing
 
         public void FinishGame()
         {
+            Debug.Log("기록 : " + Lap.Instance.CurrentLapTime);
             this.CurrentGameState = GameState.End;
-
             IngameUI.Instance.FinishGame();
 
+            if (Static.Replay.IsReplayMode == true)
+            {
+                FinishGameInReplayMode();
+            }
+            else
+            {
+                FinishGameInPlayMode();
+            }
+
+            Sound.Bgm.Manager.Instance.Stop();
+            Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Etc, (int)Enum.Sound.Effect.Etc.FinishGame);
+        }
+
+        private void FinishGameInReplayMode()
+        {
+            Replay.Player.Instance.StopReplay();
+            Sound.Bgm.Manager.Instance.Stop();
+            Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Etc, (int)Enum.Sound.Effect.Etc.FinishGame);
+            FadeOutAndLoadBeforeScene();
+        }
+
+        private void FinishGameInPlayMode()
+        {
+            Replay.Recorder.Instance.StopRecording();
             Server.Poster.PostUserAddCoinToFirebaseDB(this.AcquiredCoinQuantity);
 
             bool isUserBestRecord = IsUserBestRecord();
             if (isUserBestRecord == true)
             {
+                Replay.Recorder.Instance.SaveRecording();
+                Server.Poster.PostUserSingleRacingRecordingFile(this.currentStageID);
+
                 Server.Poster.PostUserSingleRacingRecordToFirebaseDB(this.currentStageID,
                                                                      Lap.Instance.CurrentLapTime,
                                                                      User.User.Instance.CurrentCar);
@@ -127,14 +172,12 @@ namespace Services.Scene.SingleRacing
                 Server.Poster.CheckAndPostUserSingleRacingRankingToFirebaseDB(this.currentStageID, delegateActiveFlag);
             }
 
-            Sound.Bgm.Manager.Instance.Stop();
-            Sound.Effect.Manager.Instance.Play(Enum.Sound.Effect.Type.Etc, (int)Enum.Sound.Effect.Etc.FinishGame);
             StartCoroutine(CoroutineWaitingToGoResultScene(isUserBestRecord));
         }
 
         private bool IsUserBestRecord()
         {
-            float singleRacingRecordTime = User.User.Instance.GetSingleRacingRecords(this.currentStageID, "security-related");
+            float singleRacingRecordTime = User.User.Instance.GetSingleRacingRecords(this.currentStageID, "time");
 
             if (Static.Record.IsValidRecordValue(singleRacingRecordTime) == false)
                 return true;
@@ -154,7 +197,7 @@ namespace Services.Scene.SingleRacing
 
                 if (Thread.Waiter.GetThreadWaitIsCompleted() == false)
                 {
-                    string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ThreadWaitTimeOver);
+                    string errorText = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.RequestResult.Game.ThreadWaitTimeOver);
                     Gui.Popup.Manager.Instance.OpenCheckPopup(errorText);
                     Gui.Popup.Manager.Instance.AddCheckPopupOkButtonListener(() => { Loading.Main.LoadScene(User.User.Instance.BeforeSceneName); });
                     yield break;
@@ -184,6 +227,12 @@ namespace Services.Scene.SingleRacing
             Gui.FadeEffect.Instance.StartCoroutineFadeEffectWithLoadScene(delegateLoadScene, Constants.SceneName.SingleRacingResult, false);
         }
 
+        private void FadeOutAndLoadBeforeScene()
+        {
+            Delegate.delegateLoadScene delegateLoadScene = new Delegate.delegateLoadScene(UnityEngine.SceneManagement.SceneManager.LoadScene);
+            Gui.FadeEffect.Instance.StartCoroutineFadeEffectWithLoadScene(delegateLoadScene, User.User.Instance.BeforeSceneName, false);
+        }
+
         public void FailGame()
         {
             this.CurrentGameState = GameState.End;
@@ -192,9 +241,9 @@ namespace Services.Scene.SingleRacing
             Sound.Bgm.Manager.Instance.Stop();
         }
 
-        public bool IsGameStatePlaying()
+        public bool IsGameProceeding()
         {
-            if (this.CurrentGameState != GameState.Playing)
+            if (this.CurrentGameState != GameState.Play)
                 return false;
 
             return true;

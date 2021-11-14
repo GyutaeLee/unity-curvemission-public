@@ -6,6 +6,9 @@ namespace Services.Vehicle
     {
         public void MoveTransform(Transform transfrom, Vector2 direction, float speed)
         {
+            if (Static.Replay.IsReplayMode == true)
+                return;
+
             Vector3 positionVector = direction * speed * Time.deltaTime;
             transfrom.position += positionVector;
         }

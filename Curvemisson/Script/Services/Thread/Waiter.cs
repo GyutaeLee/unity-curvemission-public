@@ -15,8 +15,10 @@ namespace Services.Thread
 
         private static bool thread_wait_isCompleted;
         private static bool thread_wait_isPurchaseResultCompleted;
+        private static bool thread_wait_isServerRequestResultCompleted;
 
         public static PurchaseResultType Thread_PurchaseResultType { get; private set; }
+        public static Enum.RequestResult.Server Thread_ServerRequestResult { get; private set; }
 
         public static void ActiveThreadWait()
         {
@@ -45,9 +47,26 @@ namespace Services.Thread
             Thread_PurchaseResultType = PurchaseResultType.None;
         }
 
+        public static void ActiveThreadWaitServerRequestResult(Enum.RequestResult.Server serverRequestResult)
+        {
+            thread_wait_isServerRequestResultCompleted = true;
+            Thread_ServerRequestResult = serverRequestResult;
+        }
+
+        public static void InActiveThreadWaitServerRequestResult()
+        {
+            thread_wait_isServerRequestResultCompleted = false;
+            Thread_ServerRequestResult = Enum.RequestResult.Server.None;
+        }
+
         public static bool GetThreadWaitIsPurchaseResultCompleted()
         {
             return thread_wait_isPurchaseResultCompleted;
+        }
+
+        public static bool GetThreadWaitIsServerRequestResultCompleted()
+        {
+            return thread_wait_isServerRequestResultCompleted;
         }
 
         public static IEnumerator CoroutineThreadWait(delegateGetFlag delegateGetFlag)

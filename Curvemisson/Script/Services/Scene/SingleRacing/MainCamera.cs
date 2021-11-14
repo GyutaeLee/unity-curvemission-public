@@ -29,7 +29,7 @@ namespace Services.Scene.SingleRacing
             {
                 defaultLerpTimeWeight = 1.0f;
             }
-            else if (GameLogic.Instance.IsGameStatePlaying() == false)
+            else if (GameLogic.Instance.IsGameProceeding() == false)
             {
                 return;
             }

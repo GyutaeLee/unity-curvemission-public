@@ -1,4 +1,4 @@
-﻿namespace Services.Enum.Error
+﻿namespace Services.Enum.RequestResult
 {
     public enum Type
     {
@@ -10,9 +10,10 @@
         Max
     }
 
-    public enum GameError
+    public enum Game
     {
         None = 0,
+        Success = 1,
 
         ThreadWaitTimeOver = 100,
         ShopPurchaseError = 101,
@@ -20,8 +21,11 @@
         Max
     }
 
-    public enum ServerError
+    public enum Server
     {
+        None = 0,
+        Success = 1,
 
+        DownloadRecordingFileFailaure = 100,
     }
 }

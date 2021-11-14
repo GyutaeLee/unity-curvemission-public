@@ -81,7 +81,7 @@ namespace Services.Scene.Shop
                     text = GameText.Manager.Instance.GetText(Enum.GameText.TextType.Shop, (int)Enum.GameText.Shop.Shop_2);
                     break;
                 default:
-                    text = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.Error.GameError.ShopPurchaseError);
+                    text = string.Format(GameText.Manager.Instance.GetText(Enum.GameText.TextType.Game, (int)Enum.GameText.Game.Error), Enum.RequestResult.Game.ShopPurchaseError);
                     break;
             }
 
